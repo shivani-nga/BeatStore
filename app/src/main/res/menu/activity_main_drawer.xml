@@ -5,34 +5,25 @@
 
     <group android:checkableBehavior="single">
         <item
-            android:id="@+id/nav_camera"
-            android:icon="@drawable/ic_menu_camera"
-            android:title="Import" />
+            android:id="@+id/nav_beats"
+            android:icon="@drawable/twotone_surround_sound_black_24"
+            android:title="@string/tag_beats" />
         <item
-            android:id="@+id/nav_gallery"
-            android:icon="@drawable/ic_menu_gallery"
-            android:title="Gallery" />
+            android:id="@+id/nav_beat_producers"
+            android:icon="@drawable/twotone_supervised_user_circle_black_24"
+            android:title="@string/tag_beat_producers" />
         <item
-            android:id="@+id/nav_slideshow"
-            android:icon="@drawable/ic_menu_slideshow"
-            android:title="Slideshow" />
+            android:id="@+id/nav_favorites"
+            android:icon="@drawable/twotone_favorite_black_24"
+            android:title="@string/tag_favorites" />
         <item
-            android:id="@+id/nav_manage"
-            android:icon="@drawable/ic_menu_manage"
-            android:title="Tools" />
+            android:id="@+id/nav_library"
+            android:icon="@drawable/twotone_library_music_black_24"
+            android:title="@string/tag_library" />
+        <item
+            android:id="@+id/nav_account_settings"
+            android:icon="@drawable/twotone_settings_black_24"
+            android:title="@string/tag_account_settings" />
     </group>
-
-    <item android:title="Communicate">
-        <menu>
-            <item
-                android:id="@+id/nav_share"
-                android:icon="@drawable/ic_menu_share"
-                android:title="Share" />
-            <item
-                android:id="@+id/nav_send"
-                android:icon="@drawable/ic_menu_send"
-                android:title="Send" />
-        </menu>
-    </item>
 
 </menu>
