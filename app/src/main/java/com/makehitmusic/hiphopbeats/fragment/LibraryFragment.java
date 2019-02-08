@@ -31,6 +31,10 @@ public class LibraryFragment extends Fragment {
 
     private TabLayout tabLayout;
     private ViewPager viewPager;
+    private int[] tabIcons = {
+            R.drawable.twotone_music_note_black_24,
+            R.drawable.twotone_person_black_24
+    };
 
     // TODO: Rename and change types of parameters
     private String mParam1;
@@ -74,8 +78,14 @@ public class LibraryFragment extends Fragment {
 
         viewPager.setAdapter(new TabAdapter(getChildFragmentManager()));
         tabLayout.setupWithViewPager(viewPager);
+        setupTabIcons();
 
         return view;
+    }
+
+    private void setupTabIcons() {
+        tabLayout.getTabAt(0).setIcon(tabIcons[0]);
+        tabLayout.getTabAt(1).setIcon(tabIcons[1]);
     }
 
     // TODO: Rename method, update argument and hook method into UI event

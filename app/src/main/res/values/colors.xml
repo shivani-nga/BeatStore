@@ -6,4 +6,7 @@
     <color name="colorActionBar">#000000</color>
 
     <color name="colorAccentLight">#6983d3</color>
+
+    <!-- Background color for app -->
+    <color name="tan_background">#FFF7DA</color>
 </resources>

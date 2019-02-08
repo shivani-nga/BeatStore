@@ -1,6 +1,5 @@
-package com.makehitmusic.hiphopbeats.ui;
+package com.makehitmusic.hiphopbeats.view;
 
-import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
@@ -20,14 +19,14 @@ import android.view.MenuItem;
 
 import com.makehitmusic.hiphopbeats.R;
 import com.makehitmusic.hiphopbeats.fragment.BeatProducersFragment;
-import com.makehitmusic.hiphopbeats.fragment.BeatsFragment;
+import com.makehitmusic.hiphopbeats.fragment.CategoryFragment;
 import com.makehitmusic.hiphopbeats.fragment.FavoritesFragment;
 import com.makehitmusic.hiphopbeats.fragment.LibraryFragment;
 import com.makehitmusic.hiphopbeats.fragment.MoreFragment;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener,
-        BeatsFragment.OnFragmentInteractionListener, BeatProducersFragment.OnFragmentInteractionListener,
+        CategoryFragment.OnFragmentInteractionListener, BeatProducersFragment.OnFragmentInteractionListener,
         FavoritesFragment.OnFragmentInteractionListener,
         LibraryFragment.OnFragmentInteractionListener,
         MoreFragment.OnFragmentInteractionListener {
@@ -74,6 +73,7 @@ public class MainActivity extends AppCompatActivity
                         .setAction("Action", null).show();
             }
         });
+        fab.hide();
 
         drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
@@ -148,8 +148,8 @@ public class MainActivity extends AppCompatActivity
         switch (navItemIndex) {
             case 0:
                 // beats
-                BeatsFragment beatsFragment = new BeatsFragment();
-                return beatsFragment;
+                CategoryFragment categoryFragment = new CategoryFragment();
+                return categoryFragment;
             case 1:
                 // beat producers
                 BeatProducersFragment beatProducersFragment = new BeatProducersFragment();
@@ -168,7 +168,7 @@ public class MainActivity extends AppCompatActivity
                 MoreFragment moreFragment = new MoreFragment();
                 return moreFragment;
             default:
-                return new BeatsFragment();
+                return new CategoryFragment();
         }
     }
 
@@ -262,6 +262,7 @@ public class MainActivity extends AppCompatActivity
             fab.show();
         else
             fab.hide();
+        fab.hide();
     }
 
     @Override
