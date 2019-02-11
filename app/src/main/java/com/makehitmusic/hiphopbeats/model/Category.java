@@ -13,11 +13,14 @@ public class Category {
     private String categoryImageLarge;
     @SerializedName("category_image")
     private String categoryImage;
+    @SerializedName("category_id")
+    private  int categoryId;
 
-    public Category(String categoryName, String categoryImageLarge, String categoryImage) {
+    public Category(String categoryName, String categoryImageLarge, String categoryImage, int categoryId) {
         this.categoryName = categoryName;
         this.categoryImage = categoryImage;
         this.categoryImageLarge = categoryImageLarge;
+        this.categoryId = categoryId;
     }
 
     public void setCategoryName(String categoryName) {
@@ -42,6 +45,14 @@ public class Category {
 
     public String getCategoryImage() {
         return categoryImage;
+    }
+
+    public void setCategoryId(int categoryId) {
+        this.categoryId = categoryId;
+    }
+
+    public int getCategoryId() {
+        return categoryId;
     }
 
 }

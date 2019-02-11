@@ -20,26 +20,41 @@ import static com.makehitmusic.hiphopbeats.utils.Url.CATEGORY_IMAGE_DEFAULT;
 
 public class CategoryAdapter extends RecyclerView.Adapter<CategoryAdapter.CategoryViewHolder> {
 
+    public interface RecyclerViewClickListener {
+
+        void onClick(View view, int position);
+    }
+
     private Context mContext;
     private List<Category> categoryList;
     private int gridLayout;
+    private RecyclerViewClickListener mListener;
 
-    public class CategoryViewHolder extends RecyclerView.ViewHolder {
+    public class CategoryViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
+
+        private RecyclerViewClickListener mListener;
         public TextView categoryTitle;
         public ImageView thumbnail;
 
-        public CategoryViewHolder(View view) {
+        public CategoryViewHolder(View view, RecyclerViewClickListener listener) {
             super(view);
             categoryTitle = (TextView) view.findViewById(R.id.title);
             thumbnail = (ImageView) view.findViewById(R.id.thumbnail);
+            mListener = listener;
+            view.setOnClickListener(this);
+        }
+
+        @Override
+        public void onClick(View view) {
+            mListener.onClick(view, getAdapterPosition());
         }
     }
 
-
-    public CategoryAdapter(List<Category> categoryList, int gridLayout, Context mContext) {
+    public CategoryAdapter(List<Category> categoryList, int gridLayout, Context mContext, RecyclerViewClickListener listener) {
         this.mContext = mContext;
         this.gridLayout = gridLayout;
         this.categoryList = categoryList;
+        mListener = listener;
     }
 
     @Override
@@ -47,7 +62,7 @@ public class CategoryAdapter extends RecyclerView.Adapter<CategoryAdapter.Catego
         View itemView = LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.category_list_item, parent, false);
 
-        return new CategoryViewHolder(itemView);
+        return new CategoryViewHolder(itemView, mListener);
     }
 
     @Override

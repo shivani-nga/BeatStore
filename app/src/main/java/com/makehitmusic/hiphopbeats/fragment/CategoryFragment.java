@@ -93,9 +93,6 @@ public class CategoryFragment extends Fragment {
         RecyclerView.LayoutManager mLayoutManager = new GridLayoutManager(getActivity(), 2);
         recyclerView.setLayoutManager(mLayoutManager);
 
-        ViewGroup headerView = (ViewGroup)getLayoutInflater().inflate(R.layout.youtube_banner, recyclerView, false);
-
-
         ApiInterface apiService = ApiClient.getClient().create(ApiInterface.class);
 
         // Get YouTube video link and open video in YouTube App
@@ -131,7 +128,15 @@ public class CategoryFragment extends Fragment {
             public void onResponse(Call<CategoryResponse> call, Response<CategoryResponse> response) {
                 int statusCode = response.code();
                 List<Category> categoryList = response.body().getResults();
-                recyclerView.setAdapter(new CategoryAdapter(categoryList, R.layout.category_list_item, getActivity()));
+
+                CategoryAdapter.RecyclerViewClickListener listener = new CategoryAdapter.RecyclerViewClickListener() {
+                    @Override
+                    public void onClick(View view, int position) {
+                        Toast.makeText(getContext(), "Position " + position, Toast.LENGTH_SHORT).show();
+                    }
+                };
+
+                recyclerView.setAdapter(new CategoryAdapter(categoryList, R.layout.category_list_item, getActivity(), listener));
             }
 
             @Override
