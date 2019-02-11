@@ -1,6 +1,7 @@
 package com.makehitmusic.hiphopbeats.fragment;
 
 import android.content.Context;
+import android.content.Intent;
 import android.content.res.Resources;
 import android.graphics.Rect;
 import android.net.Uri;
@@ -14,11 +15,14 @@ import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
+import android.widget.Toast;
 
 import com.makehitmusic.hiphopbeats.R;
 import com.makehitmusic.hiphopbeats.adapter.CategoryAdapter;
 import com.makehitmusic.hiphopbeats.model.Category;
 import com.makehitmusic.hiphopbeats.model.CategoryResponse;
+import com.makehitmusic.hiphopbeats.presenter.JsonResponse;
 import com.makehitmusic.hiphopbeats.rest.ApiClient;
 import com.makehitmusic.hiphopbeats.rest.ApiInterface;
 
@@ -47,6 +51,8 @@ public class CategoryFragment extends Fragment {
     // TODO: Rename and change types of parameters
     private String mParam1;
     private String mParam2;
+
+    ImageView youtubeBanner;
 
     private OnFragmentInteractionListener mListener;
 
@@ -87,8 +93,37 @@ public class CategoryFragment extends Fragment {
         RecyclerView.LayoutManager mLayoutManager = new GridLayoutManager(getActivity(), 2);
         recyclerView.setLayoutManager(mLayoutManager);
 
-        ApiInterface apiService =
-                ApiClient.getClient().create(ApiInterface.class);
+        ViewGroup headerView = (ViewGroup)getLayoutInflater().inflate(R.layout.youtube_banner, recyclerView, false);
+
+
+        ApiInterface apiService = ApiClient.getClient().create(ApiInterface.class);
+
+        // Get YouTube video link and open video in YouTube App
+        youtubeBanner = view.findViewById(R.id.banner);
+        youtubeBanner.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view){
+                ApiInterface apiService = ApiClient.getClient().create(ApiInterface.class);
+                Call<JsonResponse> call = apiService.getYoutubeLink();
+                call.enqueue(new Callback<JsonResponse>() {
+                    @Override
+                    public void onResponse(Call<JsonResponse> call, Response<JsonResponse> response) {
+                        int statusCode = response.code();
+                        String youtubeLink = response.body().getYoutubeLink();
+                        Uri youtubeUri = Uri.parse(youtubeLink);
+                        Intent youtubeIntent = new Intent(Intent.ACTION_VIEW, youtubeUri);
+                        startActivity(youtubeIntent);
+                    }
+
+                    @Override
+                    public void onFailure(Call<JsonResponse> call, Throwable t) {
+                        // Log error here since request failed
+                        Log.e(TAG, t.toString());
+                        Toast.makeText(getActivity(), "YouTube video can not be opened", Toast.LENGTH_SHORT).show();
+                    }
+                });
+            }
+        });
 
         Call<CategoryResponse> call = apiService.getCategory();
         call.enqueue(new Callback<CategoryResponse>() {

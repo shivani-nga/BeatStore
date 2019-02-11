@@ -10,10 +10,13 @@ public class Url {
     //public static String base_url = "https://mhm-beats.herokuapp.com";
 
     // local server - Shivani's System (WiFi - Algorithm)
-    //public static String BASE_URL = "http://10.0.0.241/Dante/MHMBeats/";
+    //public static String BASE_URL = "http://10.0.0.241/";
 
     // local server - Shivani's System (WiFi - Airtel@Zerotouch)
-    public static String BASE_URL = "http://192.168.1.8/Dante/MHMBeats/";
+    public static String BASE_URL = "http://192.168.1.8/";
+
+    // local server (sub url) - Shivani's System
+    public static String SUB_URL = "Dante/MHMBeats/";
 
      // List of APIs
 
@@ -23,7 +26,7 @@ public class Url {
      * PARAMS - nil
      * RESPONSE - JSON
      */
-    public static String PRODUCERS_LIST = BASE_URL + "/producers.php";
+    public static String PRODUCERS_LIST = SUB_URL + "producers.php";
 
     /**
      * Category/Genre List
@@ -31,7 +34,7 @@ public class Url {
      * PARAMS - nil
      * RESPONSE - JSON
      */
-    public static String CATEGORIES_LIST = BASE_URL + "/categories.php";
+    public static String CATEGORIES_LIST = SUB_URL + "categories.php";
 
     /**
      * Purchased Beats/Product List
@@ -39,7 +42,7 @@ public class Url {
      * PARAMS - nil
      * RESPONSE - JSON
      */
-    public static String PURCHASE_LIST = BASE_URL + "/products.php?purchase=true";
+    public static String PURCHASE_LIST = SUB_URL + "products.php?purchase=true";
 
     /**
      * Beats List according to producers
@@ -48,8 +51,8 @@ public class Url {
      * NOTE - latest: true will show the latest 25 beats and false will show all beats.
      * RESPONSE - JSON response for producerID = 56462, user_id = 114909
      */
-    public static String BEATS_LIST_PRODUCERS = BASE_URL +
-            "/products.php?producer_id=\\(producerID)&userid=\\(user_id)&latest=\\(latest)";
+    public static String BEATS_LIST_PRODUCERS = SUB_URL +
+            "products.php?producer_id=\\(producerID)&userid=\\(user_id)&latest=\\(latest)";
 
     /**
      * Beats List according to categories
@@ -58,8 +61,8 @@ public class Url {
      * NOTE - latest: true will show the latest 25 beats and false will show all beats.
      * RESPONSE - JSON response for categoryID = 140, userid = 114909
      */
-    public static String BEATS_LIST_CATEGORIES = BASE_URL +
-            "/products.php?category_id=\\(categoryID)&userid=\\(user_id)&latest=\\(latest)";
+    public static String BEATS_LIST_CATEGORIES = SUB_URL +
+            "products.php?category_id=\\(categoryID)&userid=\\(user_id)&latest=\\(latest)";
 
     /**
      * Favorites Beats List
@@ -68,8 +71,8 @@ public class Url {
      * NOTE - latest: true will show the latest 25 beats and false will show all beats.
      * RESPONSE - JSON response for userid = 114909
      */
-    public static String BEATS_LIST_FAVORITES = BASE_URL +
-            "/products.php?user_id=\\(userID)&latest=\\(latest)";
+    public static String BEATS_LIST_FAVORITES = SUB_URL +
+            "products.php?user_id=\\(userID)&latest=\\(latest)";
 
     /**
      * Social Register or Login User
@@ -83,7 +86,7 @@ public class Url {
      * “photo”: imagedata in base64Encoding}
      * RESPONSE - JSON
      */
-    public static String SOCIAL_LOGIN = BASE_URL + "/social_login.php";
+    public static String SOCIAL_LOGIN = SUB_URL + "social_login.php";
 
     /**
      * Add or Remove Favorites
@@ -93,7 +96,7 @@ public class Url {
      * [2] False if remove from favorites
      * RESPONSE - JSON
      */
-    public static String ADD_REMOVE_FAVORITES = BASE_URL + "favorites.php";
+    public static String ADD_REMOVE_FAVORITES = SUB_URL + "favorites.php";
 
     /**
      * Verify Receipt (not used)
@@ -101,6 +104,17 @@ public class Url {
      * PARAMS - nil
      * RESPONSE - JSON
      */
-    public static String VALIDATE_RECEIPT = BASE_URL + "validate_receipt.php";
+    public static String VALIDATE_RECEIPT = SUB_URL + "validate_receipt.php";
+
+    /**
+     * Category Image Default URL
+     */
+    public static String CATEGORY_IMAGE_DEFAULT = BASE_URL + "images/default/categories.jpg";
+
+    /**
+     * YouTube video URL link
+     * RESPONSE - JSON
+     */
+    public static String YOUTUBE_VIDEO_LINK = "video/youTube.json";
 
 }

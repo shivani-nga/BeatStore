@@ -15,6 +15,9 @@ import com.makehitmusic.hiphopbeats.model.Category;
 
 import java.util.List;
 
+import static com.makehitmusic.hiphopbeats.utils.Url.BASE_URL;
+import static com.makehitmusic.hiphopbeats.utils.Url.CATEGORY_IMAGE_DEFAULT;
+
 public class CategoryAdapter extends RecyclerView.Adapter<CategoryAdapter.CategoryViewHolder> {
 
     private Context mContext;
@@ -52,12 +55,19 @@ public class CategoryAdapter extends RecyclerView.Adapter<CategoryAdapter.Catego
         Category category = categoryList.get(position);
         holder.categoryTitle.setText(category.getCategoryName());
 
-        if (TextUtils.isEmpty(category.getCategoryImage())) {
-            Glide.with(mContext).load(R.drawable.twotone_library_music_24).animate(android.R.anim.fade_in).into(holder.thumbnail);
+        if (!(category.getCategoryImageLarge().equals(BASE_URL))) {
+            Glide.with(mContext).load(category.getCategoryImageLarge())
+                    //.placeholder(R.drawable.twotone_library_music_24)
+                    .animate(android.R.anim.fade_in).into(holder.thumbnail);
+        }
+        else if (!(category.getCategoryImage().equals(BASE_URL))) {
+            // loading cover using Glide library
+            Glide.with(mContext).load(category.getCategoryImage())
+                    //.placeholder(R.drawable.twotone_library_music_24)
+                    .animate(android.R.anim.fade_in).into(holder.thumbnail);
         }
         else {
-            // loading cover using Glide library
-            Glide.with(mContext).load(category.getCategoryImage()).placeholder(R.drawable.twotone_library_music_24)
+            Glide.with(mContext).load(CATEGORY_IMAGE_DEFAULT)
                     .animate(android.R.anim.fade_in).into(holder.thumbnail);
         }
 
