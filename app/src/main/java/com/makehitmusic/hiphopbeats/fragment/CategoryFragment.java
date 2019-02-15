@@ -43,6 +43,10 @@ import static android.support.constraint.Constraints.TAG;
  * create an instance of this fragment.
  */
 public class CategoryFragment extends Fragment {
+
+    /** Tag for log messages */
+    private static final String LOG_TAG = CategoryFragment.class.getName();
+
     // TODO: Rename parameter arguments, choose names that match
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
     private static final String ARG_PARAM1 = "param1";
@@ -116,7 +120,7 @@ public class CategoryFragment extends Fragment {
                     public void onFailure(Call<JsonResponse> call, Throwable t) {
                         // Log error here since request failed
                         Log.e(TAG, t.toString());
-                        Toast.makeText(getActivity(), "YouTube video can not be opened", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getActivity(), "YouTube video can not be played", Toast.LENGTH_SHORT).show();
                     }
                 });
             }
@@ -127,7 +131,7 @@ public class CategoryFragment extends Fragment {
             @Override
             public void onResponse(Call<CategoryResponse> call, Response<CategoryResponse> response) {
                 int statusCode = response.code();
-                List<Category> categoryList = response.body().getResults();
+                List<Category> categoryList = response.body().getCategoryResults();
 
                 CategoryAdapter.RecyclerViewClickListener listener = new CategoryAdapter.RecyclerViewClickListener() {
                     @Override

@@ -17,6 +17,9 @@ import java.util.List;
 
 public class TabbedProducersAdapter extends RecyclerView.Adapter<ProducersViewHolder> {
 
+    /** Tag for log messages */
+    private static final String LOG_TAG = TabbedProducersAdapter.class.getName();
+
     private Context context;
     private List<ProducersObject> allProducers;
 

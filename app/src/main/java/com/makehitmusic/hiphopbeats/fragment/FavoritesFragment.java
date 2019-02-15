@@ -22,6 +22,10 @@ import com.makehitmusic.hiphopbeats.adapter.TabAdapter;
  * create an instance of this fragment.
  */
 public class FavoritesFragment extends Fragment {
+
+    /** Tag for log messages */
+    private static final String LOG_TAG = FavoritesFragment.class.getName();
+
     // TODO: Rename parameter arguments, choose names that match
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
     private static final String ARG_PARAM1 = "param1";
@@ -31,6 +35,7 @@ public class FavoritesFragment extends Fragment {
 
     private TabLayout tabLayout;
     private ViewPager viewPager;
+    TabAdapter tabAdapter;
     private int[] tabIcons = {
             R.drawable.twotone_music_note_black_24,
             R.drawable.twotone_person_black_24
@@ -76,7 +81,9 @@ public class FavoritesFragment extends Fragment {
         tabLayout = (TabLayout)view.findViewById(R.id.tabs);
         viewPager = (ViewPager)view.findViewById(R.id.viewpager);
 
-        viewPager.setAdapter(new TabAdapter(getChildFragmentManager()));
+        tabAdapter = new TabAdapter(getChildFragmentManager(), 3);
+
+        viewPager.setAdapter(tabAdapter);
         tabLayout.setupWithViewPager(viewPager);
         setupTabIcons();
 

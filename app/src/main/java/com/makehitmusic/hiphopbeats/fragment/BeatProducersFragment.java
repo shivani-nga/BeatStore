@@ -19,6 +19,10 @@ import com.makehitmusic.hiphopbeats.R;
  * create an instance of this fragment.
  */
 public class BeatProducersFragment extends Fragment {
+
+    /** Tag for log messages */
+    private static final String LOG_TAG = BeatProducersFragment.class.getName();
+
     // TODO: Rename parameter arguments, choose names that match
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
     private static final String ARG_PARAM1 = "param1";

@@ -23,6 +23,9 @@ import static com.makehitmusic.hiphopbeats.utils.Url.CATEGORY_IMAGE_DEFAULT;
 
 public class CategoryAdapter extends RecyclerView.Adapter<CategoryAdapter.CategoryViewHolder> {
 
+    /** Tag for log messages */
+    private static final String LOG_TAG = CategoryAdapter.class.getName();
+
     public interface RecyclerViewClickListener {
 
         void onClick(View view, int position);
@@ -100,7 +103,7 @@ public class CategoryAdapter extends RecyclerView.Adapter<CategoryAdapter.Catego
                 Intent intent = new Intent(mContext, CategoryDetailActivity.class);
                 intent.putExtra("position", positionGlobal);
                 intent.putExtra("category_name", category.getCategoryName());
-                intent.putExtra("category_id", category.getCategoryId());
+                intent.putExtra("category_id", String.valueOf(category.getCategoryId()));
                 mContext.startActivity(intent);
             }
         });
