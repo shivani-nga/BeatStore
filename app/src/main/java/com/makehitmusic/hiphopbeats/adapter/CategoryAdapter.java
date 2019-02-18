@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -97,17 +98,6 @@ public class CategoryAdapter extends RecyclerView.Adapter<CategoryAdapter.Catego
             Glide.with(mContext).load(CATEGORY_IMAGE_DEFAULT)
                     .animate(android.R.anim.fade_in).into(holder.thumbnail);
         }
-        holder.cardView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent intent = new Intent(mContext, CategoryDetailActivity.class);
-                intent.putExtra("position", positionGlobal);
-                intent.putExtra("category_name", category.getCategoryName());
-                intent.putExtra("category_id", String.valueOf(category.getCategoryId()));
-                mContext.startActivity(intent);
-            }
-        });
-
     }
 
     @Override

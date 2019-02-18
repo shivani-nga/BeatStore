@@ -25,6 +25,7 @@ import com.makehitmusic.hiphopbeats.model.CategoryResponse;
 import com.makehitmusic.hiphopbeats.presenter.JsonResponse;
 import com.makehitmusic.hiphopbeats.rest.ApiClient;
 import com.makehitmusic.hiphopbeats.rest.ApiInterface;
+import com.makehitmusic.hiphopbeats.view.CategoryDetailActivity;
 
 import java.util.List;
 
@@ -119,7 +120,7 @@ public class CategoryFragment extends Fragment {
                     @Override
                     public void onFailure(Call<JsonResponse> call, Throwable t) {
                         // Log error here since request failed
-                        Log.e(TAG, t.toString());
+                        Log.e(LOG_TAG, t.toString());
                         Toast.makeText(getActivity(), "YouTube video can not be played", Toast.LENGTH_SHORT).show();
                     }
                 });
@@ -131,12 +132,18 @@ public class CategoryFragment extends Fragment {
             @Override
             public void onResponse(Call<CategoryResponse> call, Response<CategoryResponse> response) {
                 int statusCode = response.code();
-                List<Category> categoryList = response.body().getCategoryResults();
+                final List<Category> categoryList = response.body().getCategoryResults();
 
                 CategoryAdapter.RecyclerViewClickListener listener = new CategoryAdapter.RecyclerViewClickListener() {
                     @Override
                     public void onClick(View view, int position) {
-                        Toast.makeText(getContext(), "Position " + position, Toast.LENGTH_SHORT).show();
+                        Category clickedCategory = categoryList.get(position);
+                        Intent intent = new Intent(getActivity(), CategoryDetailActivity.class);
+                        intent.putExtra("position", position);
+                        intent.putExtra("category_name", clickedCategory.getCategoryName());
+                        intent.putExtra("category_id", String.valueOf(clickedCategory.getCategoryId()));
+                        Log.d("CategoryID[CatAdpt]", String.valueOf(clickedCategory.getCategoryId()));
+                        getActivity().startActivity(intent);
                     }
                 };
 

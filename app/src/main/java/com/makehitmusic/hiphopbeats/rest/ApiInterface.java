@@ -10,19 +10,19 @@ import retrofit2.http.Query;
 
 public interface ApiInterface {
 
-    @GET("categories.php")
+    @GET("Dante/MHMBeats/categories.php")
     Call<CategoryResponse> getCategory();
 
-    @GET("products.php")
+    @GET("Dante/MHMBeats/products.php")
     Call<CategoryResponse> getBeatsDetails(@Query("category_id") int categoryId,
                                            @Query("userid") int userId,
                                            @Query("latest") String latestBeats);
 
-    @GET("products.php")
+    @GET("Dante/MHMBeats/products.php")
     Call<CategoryResponse> getBeatsDetails(@Query("userid") int userId,
                                            @Query("latest") String latestBeats);
 
-    @GET("products.php")
+    @GET("Dante/MHMBeats/products.php")
     Call<CategoryResponse> getBeatsDetails(@Query("purchase") String purchasedBeats);
 
     @GET("video/youTube.json")

@@ -71,7 +71,7 @@ public class TabBeatsFragment extends Fragment {
 
         // Category Tab is selected now
         if (tab_position == CATEGORY_TAB && categoryId != 0) {
-            Log.d("CategoryId", String.valueOf(categoryId));
+            Log.d("CategoryID[TabBeatFrag]", String.valueOf(categoryId));
             Call<CategoryResponse> call = apiService.getBeatsDetails(categoryId, 114909, "false");
             call.enqueue(new Callback<CategoryResponse>() {
                 @Override
