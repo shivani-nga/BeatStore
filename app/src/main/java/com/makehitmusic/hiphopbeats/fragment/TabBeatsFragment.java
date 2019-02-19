@@ -1,5 +1,8 @@
 package com.makehitmusic.hiphopbeats.fragment;
 
+import android.app.ProgressDialog;
+import android.media.MediaPlayer;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.util.Log;
@@ -19,6 +22,7 @@ import com.makehitmusic.hiphopbeats.model.CategoryResponse;
 import com.makehitmusic.hiphopbeats.rest.ApiClient;
 import com.makehitmusic.hiphopbeats.rest.ApiInterface;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -42,6 +46,13 @@ public class TabBeatsFragment extends Fragment {
     private final int LIBRARY_TAB = 4;
 
     public int categoryId;
+    ArrayList<BeatsObject> beatsList;
+
+    /**
+     * help to toggle between play and pause.
+     */
+    private boolean playPause;
+    private MediaPlayer mediaPlayer;
 
     public TabBeatsFragment() {
         // Required empty public constructor
@@ -56,6 +67,9 @@ public class TabBeatsFragment extends Fragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+
+        // Initialize the MediaPlayer
+        mediaPlayer = new MediaPlayer();
 
         // Inflate the layout for this fragment
         View rootView =  inflater.inflate(R.layout.fragment_tab_beats, container, false);
@@ -77,7 +91,7 @@ public class TabBeatsFragment extends Fragment {
                 @Override
                 public void onResponse(Call<CategoryResponse> call, Response<CategoryResponse> response) {
                     int statusCode = response.code();
-                    ArrayList<BeatsObject> beatsList = response.body().getBeatsResults();
+                    beatsList = response.body().getBeatsResults();
 
                     beatsListView.setAdapter(new TabbedBeatsAdapter(getActivity(), beatsList));
                 }
@@ -96,7 +110,7 @@ public class TabBeatsFragment extends Fragment {
                 @Override
                 public void onResponse(Call<CategoryResponse> call, Response<CategoryResponse> response) {
                     int statusCode = response.code();
-                    ArrayList<BeatsObject> beatsList = response.body().getBeatsResults();
+                    beatsList = response.body().getBeatsResults();
 
                     beatsListView.setAdapter(new TabbedBeatsAdapter(getActivity(), beatsList));
                 }
@@ -115,7 +129,7 @@ public class TabBeatsFragment extends Fragment {
                 @Override
                 public void onResponse(Call<CategoryResponse> call, Response<CategoryResponse> response) {
                     int statusCode = response.code();
-                    ArrayList<BeatsObject> beatsList = response.body().getBeatsResults();
+                    beatsList = response.body().getBeatsResults();
 
                     beatsListView.setAdapter(new TabbedBeatsAdapter(getActivity(), beatsList));
                 }
@@ -132,10 +146,96 @@ public class TabBeatsFragment extends Fragment {
         beatsListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int position, long id) {
+                BeatsObject beatsObject = beatsList.get(position);
+                new Player().execute(beatsObject.getItemSamplePath());
                 Toast.makeText(getActivity(), "Music will be played when music functionality is added", Toast.LENGTH_SHORT).show();
             }
         });
         return rootView;
+    }
+
+    class Player extends AsyncTask<String, Void, Boolean> {
+
+        @Override
+        protected Boolean doInBackground(String... params) {
+            // TODO Auto-generated method stub
+            Boolean prepared;
+            try {
+
+                mediaPlayer.setDataSource(params[0]);
+
+                mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+
+                    @Override
+                    public void onCompletion(MediaPlayer mp) {
+                        // TODO Auto-generated method stub
+                        playPause = false;
+                        mediaPlayer.stop();
+                        mediaPlayer.reset();
+                    }
+                });
+                mediaPlayer.prepare();
+                prepared = true;
+            } catch (IllegalArgumentException e) {
+                // TODO Auto-generated catch block
+                Log.d("IllegalArgument", e.getMessage());
+                prepared = false;
+                e.printStackTrace();
+            } catch (SecurityException e) {
+                // TODO Auto-generated catch block
+                prepared = false;
+                e.printStackTrace();
+            } catch (IllegalStateException e) {
+                // TODO Auto-generated catch block
+                prepared = false;
+                e.printStackTrace();
+            } catch (IOException e) {
+                // TODO Auto-generated catch block
+                prepared = false;
+                e.printStackTrace();
+            }
+            return prepared;
+        }
+
+        @Override
+        protected void onPostExecute(Boolean result) {
+            // TODO Auto-generated method stub
+            super.onPostExecute(result);
+            Log.d("Prepared", "//" + result);
+            mediaPlayer.start();
+        }
+
+        public Player() {
+        }
+
+        @Override
+        protected void onPreExecute() {
+            // TODO Auto-generated method stub
+            super.onPreExecute();
+
+        }
+
+        /**
+         * Clean up the media player by releasing its resources.
+         */
+        private void releaseMediaPlayer() {
+            // If the media player is not null, then it may be currently playing a sound.
+            if (mediaPlayer != null) {
+                // Regardless of the current state of the media player, release its resources
+                // because we no longer need it.
+                mediaPlayer.release();
+
+                // Set the media player back to null. For our code, we've decided that
+                // setting the media player to null is an easy way to tell that the media player
+                // is not configured to play an audio file at the moment.
+                mediaPlayer = null;
+
+                // Regardless of whether or not we were granted audio focus, abandon it. This also
+                // unregisters the AudioFocusChangeListener so we don't get anymore callbacks.
+                // mAudioManager.abandonAudioFocus(mOnAudioFocusChangeListener);
+            }
+        }
+
     }
 
 }

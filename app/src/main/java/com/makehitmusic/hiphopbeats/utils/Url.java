@@ -7,7 +7,7 @@ package com.makehitmusic.hiphopbeats.utils;
 public class Url {
 
     // global server - Client's End (Production Purpose)
-    //public static String BASE_URL = "https://www.makehitmusic.com/mhmbeats/";
+    //public static String BASE_URL = "https://www.makehitmusic.com/";
 
     // local server - Client's End (Testing Purpose)
     //public static String BASE_URL = "http://10.0.0.118/";
@@ -16,10 +16,16 @@ public class Url {
     //public static String BASE_URL = "http://10.0.0.241/";
 
     // local server - Shivani's System (WiFi - Airtel@Zerotouch)
-    public static String BASE_URL = "http://192.168.1.5/";
+    //public static String BASE_URL = "http://192.168.1.5/";
 
-    // local server (sub url) - Shivani's System
+    // local server - Sushant's System (WiFi - Airtel@Zerotouch)
+    public static String BASE_URL = "http://192.168.1.15/";
+
+    // local server (sub url) - Any System
     public static String SUB_URL = "Dante/MHMBeats/";
+
+    // global server (sub url) - Production System
+    //public static String SUB_URL = "mhmbeats/";
 
      // List of APIs
 
