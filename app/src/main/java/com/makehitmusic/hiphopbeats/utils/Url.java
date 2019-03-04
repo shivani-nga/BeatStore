@@ -13,7 +13,7 @@ public class Url {
     //public static String BASE_URL = "http://10.0.0.118/";
 
     // local server - Shivani's System (WiFi - Algorithm)
-    //public static String BASE_URL = "http://10.0.0.241/";
+    //public static String BASE_URL = "http://10.0.0.66/";
 
     // local server - Shivani's System (WiFi - Airtel@Zerotouch)
     //public static String BASE_URL = "http://192.168.1.5/";

@@ -15,12 +15,16 @@ import android.widget.Toast;
 
 import com.makehitmusic.hiphopbeats.R;
 import com.makehitmusic.hiphopbeats.adapter.CategoryAdapter;
+import com.makehitmusic.hiphopbeats.adapter.PlayerAdapter;
 import com.makehitmusic.hiphopbeats.adapter.TabbedBeatsAdapter;
 import com.makehitmusic.hiphopbeats.model.BeatsObject;
 import com.makehitmusic.hiphopbeats.model.Category;
 import com.makehitmusic.hiphopbeats.model.CategoryResponse;
+import com.makehitmusic.hiphopbeats.presenter.MediaPlayerHolder;
+import com.makehitmusic.hiphopbeats.presenter.PlaybackInfoListener;
 import com.makehitmusic.hiphopbeats.rest.ApiClient;
 import com.makehitmusic.hiphopbeats.rest.ApiInterface;
+import com.makehitmusic.hiphopbeats.view.MainActivity;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -40,10 +44,14 @@ public class TabBeatsFragment extends Fragment {
     ListView beatsListView;
     private int tab_position;
 
+    public static final String TAG = "TabBeatsFragment";
+
     private final int CATEGORY_TAB = 1;
     private final int PRODUCERS_TAB = 2;
     private final int FAVORITES_TAB = 3;
     private final int LIBRARY_TAB = 4;
+
+    private PlayerAdapter mPlayerAdapter;
 
     public int categoryId;
     ArrayList<BeatsObject> beatsList;
@@ -142,100 +150,53 @@ public class TabBeatsFragment extends Fragment {
             });
         }
 
+        initializePlaybackController();
+
         // Setup the item click listener
         beatsListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int position, long id) {
                 BeatsObject beatsObject = beatsList.get(position);
-                new Player().execute(beatsObject.getItemSamplePath());
-                Toast.makeText(getActivity(), "Music will be played when music functionality is added", Toast.LENGTH_SHORT).show();
+                mPlayerAdapter.playFromList(beatsObject.getItemSamplePath());
+                // new Player().execute(beatsObject.getItemSamplePath());
+                Toast.makeText(getActivity(), "Music is playing because music functionality is added", Toast.LENGTH_SHORT).show();
             }
         });
         return rootView;
     }
 
-    class Player extends AsyncTask<String, Void, Boolean> {
+    private void initializePlaybackController() {
+        MediaPlayerHolder mMediaPlayerHolder = new MediaPlayerHolder(getActivity());
+        Log.d(TAG, "initializePlaybackController: created MediaPlayerHolder");
+        mMediaPlayerHolder.setPlaybackInfoListener(new PlaybackListener());
+        mPlayerAdapter = mMediaPlayerHolder;
+        Log.d(TAG, "initializePlaybackController: MediaPlayerHolder progress callback set");
+    }
+
+    public class PlaybackListener extends PlaybackInfoListener {
 
         @Override
-        protected Boolean doInBackground(String... params) {
-            // TODO Auto-generated method stub
-            Boolean prepared;
-            try {
-
-                mediaPlayer.setDataSource(params[0]);
-
-                mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
-
-                    @Override
-                    public void onCompletion(MediaPlayer mp) {
-                        // TODO Auto-generated method stub
-                        playPause = false;
-                        mediaPlayer.stop();
-                        mediaPlayer.reset();
-                    }
-                });
-                mediaPlayer.prepare();
-                prepared = true;
-            } catch (IllegalArgumentException e) {
-                // TODO Auto-generated catch block
-                Log.d("IllegalArgument", e.getMessage());
-                prepared = false;
-                e.printStackTrace();
-            } catch (SecurityException e) {
-                // TODO Auto-generated catch block
-                prepared = false;
-                e.printStackTrace();
-            } catch (IllegalStateException e) {
-                // TODO Auto-generated catch block
-                prepared = false;
-                e.printStackTrace();
-            } catch (IOException e) {
-                // TODO Auto-generated catch block
-                prepared = false;
-                e.printStackTrace();
-            }
-            return prepared;
+        public void onDurationChanged(int duration) {
+            Log.d(TAG, String.format("setPlaybackDuration: setMax(%d)", duration));
         }
 
         @Override
-        protected void onPostExecute(Boolean result) {
-            // TODO Auto-generated method stub
-            super.onPostExecute(result);
-            Log.d("Prepared", "//" + result);
-            mediaPlayer.start();
-        }
-
-        public Player() {
+        public void onPositionChanged(int position) {
+                Log.d(TAG, String.format("setPlaybackPosition: setProgress(%d)", position));
         }
 
         @Override
-        protected void onPreExecute() {
-            // TODO Auto-generated method stub
-            super.onPreExecute();
-
+        public void onStateChanged(@State int state) {
         }
 
-        /**
-         * Clean up the media player by releasing its resources.
-         */
-        private void releaseMediaPlayer() {
-            // If the media player is not null, then it may be currently playing a sound.
-            if (mediaPlayer != null) {
-                // Regardless of the current state of the media player, release its resources
-                // because we no longer need it.
-                mediaPlayer.release();
-
-                // Set the media player back to null. For our code, we've decided that
-                // setting the media player to null is an easy way to tell that the media player
-                // is not configured to play an audio file at the moment.
-                mediaPlayer = null;
-
-                // Regardless of whether or not we were granted audio focus, abandon it. This also
-                // unregisters the AudioFocusChangeListener so we don't get anymore callbacks.
-                // mAudioManager.abandonAudioFocus(mOnAudioFocusChangeListener);
-            }
+        @Override
+        public void onPlaybackCompleted() {
         }
 
+        @Override
+        public void onLogUpdated(String message) {
+
+        }
     }
 
 }

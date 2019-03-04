@@ -11,7 +11,8 @@
     sothree:umanoParallaxOffset="100dp"
     sothree:umanoDragView="@+id/dragView"
     sothree:umanoOverlay="true"
-    sothree:umanoScrollableView="@+id/list">
+    sothree:umanoScrollableView="@+id/list"
+    tools:context=".view.MainActivity">
 
     <!-- MAIN CONTENT -->
     <android.support.design.widget.CoordinatorLayout
@@ -71,37 +72,70 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="68dp"
+            android:background="@color/colorAccent"
             android:orientation="horizontal">
 
-            <Button
-                android:id="@+id/button_play"
+            <ImageView
+                android:id="@+id/current_beat_cover"
+                android:layout_width="60dp"
+                android:layout_height="60dp"
+                android:layout_gravity="center"
+                android:gravity="center"
+                tools:src="@drawable/ic_launcher_background"
+                android:scaleType="centerCrop"
+                android:layout_marginStart="10dp"
+                android:layout_marginTop="4dp"
+                android:layout_marginBottom="4dp"
+                android:layout_marginEnd="10dp"
+                android:background="@drawable/rounded_border" />
+
+            <TextView
+                android:id="@+id/current_beat_name"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textSize="14sp"
-                android:text="Play"
-                android:gravity="center"
-                android:layout_gravity="start|center_vertical"
-                android:paddingRight="10dp"
-                android:paddingLeft="10dp"/>
+                android:textSize="20sp"
+                android:layout_gravity="center_vertical"
+                android:gravity="center|center_vertical"
+                android:singleLine="true"
+                android:ellipsize="marquee"
+                android:layout_marginEnd="20dp"
+                android:textColor="@color/colorPrimary"
+                android:text="Now Playing" />
 
-            <Button
+            <ImageView
+                android:id="@+id/button_play_pause"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:src="@drawable/round_play_arrow_white_24"
+                android:layout_gravity="end|center_vertical"
+                android:layout_marginEnd="10dp" />
+
+            <ImageView
+                android:id="@+id/button_pause"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:src="@drawable/round_pause_white_24"
+                android:layout_gravity="end|center_vertical"
+                android:layout_marginEnd="10dp" />
+
+            <ImageView
                 android:id="@+id/button_next"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textSize="14sp"
                 android:gravity="center"
-                android:layout_gravity="center_vertical"
-                android:text="Next"
-                android:paddingRight="10dp"
-                android:paddingLeft="10dp"/>
+                android:src="@drawable/round_skip_next_white_24"
+                android:layout_gravity="end|center_vertical"
+                android:layout_marginEnd="10dp" />
 
             <SeekBar
                 android:id="@+id/seekbar_audio"
-                android:layout_gravity="center_vertical"
-                android:layout_width="match_parent"
+                android:layout_width="5dp"
                 android:layout_height="wrap_content"
-                android:paddingRight="10dp"
-                android:paddingLeft="10dp" />
+                android:gravity="center"
+                android:layout_gravity="end|center_vertical"
+                android:layout_marginEnd="10dp"/>
 
         </LinearLayout>
 

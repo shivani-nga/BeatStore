@@ -7,6 +7,7 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
+import android.util.Log;
 import android.view.View;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
@@ -16,13 +17,18 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.ImageView;
+import android.widget.SeekBar;
 
 import com.makehitmusic.hiphopbeats.R;
+import com.makehitmusic.hiphopbeats.adapter.PlayerAdapter;
 import com.makehitmusic.hiphopbeats.fragment.BeatProducersFragment;
 import com.makehitmusic.hiphopbeats.fragment.CategoryFragment;
 import com.makehitmusic.hiphopbeats.fragment.FavoritesFragment;
 import com.makehitmusic.hiphopbeats.fragment.LibraryFragment;
 import com.makehitmusic.hiphopbeats.fragment.MoreFragment;
+import com.makehitmusic.hiphopbeats.presenter.MediaPlayerHolder;
+import com.makehitmusic.hiphopbeats.presenter.PlaybackInfoListener;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener,
@@ -30,6 +36,13 @@ public class MainActivity extends AppCompatActivity
         FavoritesFragment.OnFragmentInteractionListener,
         LibraryFragment.OnFragmentInteractionListener,
         MoreFragment.OnFragmentInteractionListener {
+
+    public static final String TAG = "MainActivity";
+    public static final int MEDIA_RES_ID = R.raw.jazz_in_paris;
+
+    private SeekBar mSeekbarAudio;
+    private PlayerAdapter mPlayerAdapter;
+    private boolean mUserIsSeeking = false;
 
     // index to identify current nav menu item
     public static int navItemIndex = 0;
@@ -57,6 +70,7 @@ public class MainActivity extends AppCompatActivity
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
@@ -88,6 +102,122 @@ public class MainActivity extends AppCompatActivity
             navItemIndex = 0;
             CURRENT_TAG = TAG_BEATS;
             loadHomeFragment();
+        }
+
+        initializeUI();
+        initializeSeekbar();
+        initializePlaybackController();
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        // mPlayerAdapter.loadMedia(MEDIA_RES_ID);
+        Log.d(TAG, "onStart: create MediaPlayer");
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        if (isChangingConfigurations() && mPlayerAdapter.isPlaying()) {
+            Log.d(TAG, "onStop: don't release MediaPlayer as screen is rotating & playing");
+        } else {
+            mPlayerAdapter.release();
+            Log.d(TAG, "onStop: release MediaPlayer");
+        }
+    }
+
+    private void initializeUI() {
+        ImageView mPlayButton = (ImageView) findViewById(R.id.button_play_pause);
+        ImageView mPauseButton = (ImageView) findViewById(R.id.button_pause);
+        ImageView mNextButton = (ImageView) findViewById(R.id.button_next);
+        mSeekbarAudio = (SeekBar) findViewById(R.id.seekbar_audio);
+
+        mPauseButton.setOnClickListener(
+                new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        mPlayerAdapter.pause();
+                    }
+                });
+        mPlayButton.setOnClickListener(
+                new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        mPlayerAdapter.play();
+                    }
+                });
+        mNextButton.setOnClickListener(
+                new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        mPlayerAdapter.reset();
+                    }
+                });
+    }
+
+    private void initializePlaybackController() {
+        MediaPlayerHolder mMediaPlayerHolder = new MediaPlayerHolder(this);
+        Log.d(TAG, "initializePlaybackController: created MediaPlayerHolder");
+        mMediaPlayerHolder.setPlaybackInfoListener(new PlaybackListener());
+        mPlayerAdapter = mMediaPlayerHolder;
+        Log.d(TAG, "initializePlaybackController: MediaPlayerHolder progress callback set");
+    }
+
+    private void initializeSeekbar() {
+        mSeekbarAudio.setOnSeekBarChangeListener(
+                new SeekBar.OnSeekBarChangeListener() {
+                    int userSelectedPosition = 0;
+
+                    @Override
+                    public void onStartTrackingTouch(SeekBar seekBar) {
+                        mUserIsSeeking = true;
+                    }
+
+                    @Override
+                    public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                        if (fromUser) {
+                            userSelectedPosition = progress;
+                        }
+                    }
+
+                    @Override
+                    public void onStopTrackingTouch(SeekBar seekBar) {
+                        mUserIsSeeking = false;
+                        mPlayerAdapter.seekTo(userSelectedPosition);
+                    }
+                });
+    }
+
+    public class PlaybackListener extends PlaybackInfoListener {
+
+        @Override
+        public void onDurationChanged(int duration) {
+            mSeekbarAudio.setMax(duration);
+            Log.d(TAG, String.format("setPlaybackDuration: setMax(%d)", duration));
+        }
+
+        @Override
+        public void onPositionChanged(int position) {
+            if (!mUserIsSeeking) {
+                mSeekbarAudio.setProgress(position);
+                Log.d(TAG, String.format("setPlaybackPosition: setProgress(%d)", position));
+            }
+        }
+
+        @Override
+        public void onStateChanged(@State int state) {
+            String stateToString = PlaybackInfoListener.convertStateToString(state);
+            onLogUpdated(String.format("onStateChanged(%s)", stateToString));
+        }
+
+        @Override
+        public void onPlaybackCompleted() {
+        }
+
+        @Override
+        public void onLogUpdated(String message) {
+
         }
     }
 
