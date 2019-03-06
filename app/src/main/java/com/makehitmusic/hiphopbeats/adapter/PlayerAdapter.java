@@ -16,11 +16,10 @@
 
 package com.makehitmusic.hiphopbeats.adapter;
 
-import com.makehitmusic.hiphopbeats.view.MainActivity;
 import com.makehitmusic.hiphopbeats.presenter.MediaPlayerHolder;
 
 /**
- * Allows {@link MainActivity} to control media playback of {@link MediaPlayerHolder}.
+ * Allows Activities and Fragments to control media playback of {@link MediaPlayerHolder}.
  */
 public interface PlayerAdapter {
 

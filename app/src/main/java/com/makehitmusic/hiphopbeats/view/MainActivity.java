@@ -19,6 +19,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.ImageView;
 import android.widget.SeekBar;
+import android.widget.TextView;
 
 import com.makehitmusic.hiphopbeats.R;
 import com.makehitmusic.hiphopbeats.adapter.PlayerAdapter;
@@ -43,6 +44,12 @@ public class MainActivity extends AppCompatActivity
     private SeekBar mSeekbarAudio;
     private PlayerAdapter mPlayerAdapter;
     private boolean mUserIsSeeking = false;
+
+    ImageView mBeatCover;
+    TextView mBeatName;
+    ImageView mPlayButton;
+    ImageView mPauseButton;
+    ImageView mNextButton;
 
     // index to identify current nav menu item
     public static int navItemIndex = 0;
@@ -128,30 +135,32 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void initializeUI() {
-        ImageView mPlayButton = (ImageView) findViewById(R.id.button_play_pause);
-        ImageView mPauseButton = (ImageView) findViewById(R.id.button_pause);
-        ImageView mNextButton = (ImageView) findViewById(R.id.button_next);
+        mBeatCover = (ImageView) findViewById(R.id.current_beat_cover);
+        mBeatName = (TextView) findViewById(R.id.current_beat_name);
+        mPlayButton = (ImageView) findViewById(R.id.button_play_pause);
+        mPauseButton = (ImageView) findViewById(R.id.button_pause);
+        mNextButton = (ImageView) findViewById(R.id.button_next);
         mSeekbarAudio = (SeekBar) findViewById(R.id.seekbar_audio);
 
         mPauseButton.setOnClickListener(
                 new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
-                        mPlayerAdapter.pause();
+                        //mPlayerAdapter.pause();
                     }
                 });
         mPlayButton.setOnClickListener(
                 new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
-                        mPlayerAdapter.play();
+                        //mPlayerAdapter.play();
                     }
                 });
         mNextButton.setOnClickListener(
                 new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
-                        mPlayerAdapter.reset();
+                        //mPlayerAdapter.reset();
                     }
                 });
     }
@@ -219,6 +228,11 @@ public class MainActivity extends AppCompatActivity
         public void onLogUpdated(String message) {
 
         }
+    }
+
+    public void changeMusicContent(String beatName, String beatImageUrl, String producerName,
+                                   String isLiked, double beatPrice) {
+        mBeatName.setText(beatName);
     }
 
     /***

@@ -33,7 +33,7 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * Exposes the functionality of the {@link MediaPlayer} and implements the {@link PlayerAdapter}
- * so that {@link MainActivity} can control music playback.
+ * so that Activities and Fragments can control music playback.
  */
 public final class MediaPlayerHolder implements PlayerAdapter {
 
@@ -68,7 +68,7 @@ public final class MediaPlayerHolder implements PlayerAdapter {
                 // The AUDIOFOCUS_LOSS_TRANSIENT case means that we've lost audio focus for a
                 // short amount of time. The AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK case means that
                 // our app is allowed to continue playing sound but at a lower volume. We'll treat
-                // both cases the same way because our app is playing short sound files.
+                // both cases the same way because our app is playing long sound files.
 
                 // We will continue to play the music at a lower volume.
                 mMediaPlayer.start();
@@ -78,7 +78,7 @@ public final class MediaPlayerHolder implements PlayerAdapter {
             } else if (focusChange == AudioManager.AUDIOFOCUS_LOSS) {
                 // The AUDIOFOCUS_LOSS case means we've lost audio focus and
                 // Stop playback and clean up resources
-                releaseMediaPlayer();
+                mMediaPlayer.pause();
             }
         }
     };
@@ -90,6 +90,12 @@ public final class MediaPlayerHolder implements PlayerAdapter {
     private MediaPlayer.OnCompletionListener mCompletionListener = new MediaPlayer.OnCompletionListener() {
         @Override
         public void onCompletion(MediaPlayer mediaPlayer) {
+            stopUpdatingCallbackWithPosition(true);
+            if (mPlaybackInfoListener != null) {
+                mPlaybackInfoListener.onStateChanged(PlaybackInfoListener.State.COMPLETED);
+                mPlaybackInfoListener.onPlaybackCompleted();
+            }
+
             // Now that the sound file has finished playing, release the media player resources.
             releaseMediaPlayer();
         }
@@ -98,25 +104,24 @@ public final class MediaPlayerHolder implements PlayerAdapter {
     /**
      * Once the {@link MediaPlayer} is released, it can't be used again, and another one has to be
      * created. In the onStop() method of the {@link MainActivity} the {@link MediaPlayer} is
-     * released. Then in the onStart() of the {@link MainActivity} a new {@link MediaPlayer}
-     * object has to be created. That's why this method is private, and called by load(int) and
+     * released. Then whenever it is needed a new {@link MediaPlayer}
+     * object has to be created. That's why this method is private, and called by play() and
      * not the constructor.
      */
     private void initializeMediaPlayer() {
         if (mMediaPlayer == null) {
             mMediaPlayer = new MediaPlayer();
-            mMediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
-                @Override
-                public void onCompletion(MediaPlayer mediaPlayer) {
-                    stopUpdatingCallbackWithPosition(true);
-                    logToUI("MediaPlayer playback completed");
-                    if (mPlaybackInfoListener != null) {
-                        mPlaybackInfoListener.onStateChanged(PlaybackInfoListener.State.COMPLETED);
-                        mPlaybackInfoListener.onPlaybackCompleted();
-                    }
-                }
-            });
-            logToUI("mMediaPlayer = new MediaPlayer()");
+
+            // Setup a listener on the media player, so that we can stop and release the
+            // media player once the sound has finished playing.
+            mMediaPlayer.setOnCompletionListener(mCompletionListener);
+        } else {
+            releaseMediaPlayer();
+            mMediaPlayer = new MediaPlayer();
+
+            // Setup a listener on the media player, so that we can stop and release the
+            // media player once the sound has finished playing.
+            mMediaPlayer.setOnCompletionListener(mCompletionListener);
         }
     }
 
@@ -155,8 +160,7 @@ public final class MediaPlayerHolder implements PlayerAdapter {
     public void release() {
         if (mMediaPlayer != null) {
             logToUI("release() and mMediaPlayer = null");
-            mMediaPlayer.release();
-            mMediaPlayer = null;
+            releaseMediaPlayer();
         }
     }
 
@@ -188,8 +192,8 @@ public final class MediaPlayerHolder implements PlayerAdapter {
         mAudioManager = (AudioManager) mContext.getSystemService(Context.AUDIO_SERVICE);
 
         // Request audio focus so in order to play the audio file. The app needs to play a
-        // short audio file, so we will request audio focus with a short amount of time
-        // with AUDIOFOCUS_GAIN_TRANSIENT.
+        // long audio file, so we will request audio focus with a short amount of time
+        // with AUDIOFOCUS_GAIN.
         int result = mAudioManager.requestAudioFocus(mOnAudioFocusChangeListener,
                 AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN);
 

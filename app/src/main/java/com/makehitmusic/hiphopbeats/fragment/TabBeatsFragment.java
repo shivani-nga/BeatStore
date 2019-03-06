@@ -53,14 +53,10 @@ public class TabBeatsFragment extends Fragment {
 
     private PlayerAdapter mPlayerAdapter;
 
+    private MainActivity mMainActivity;
+
     public int categoryId;
     ArrayList<BeatsObject> beatsList;
-
-    /**
-     * help to toggle between play and pause.
-     */
-    private boolean playPause;
-    private MediaPlayer mediaPlayer;
 
     public TabBeatsFragment() {
         // Required empty public constructor
@@ -75,9 +71,6 @@ public class TabBeatsFragment extends Fragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-
-        // Initialize the MediaPlayer
-        mediaPlayer = new MediaPlayer();
 
         // Inflate the layout for this fragment
         View rootView =  inflater.inflate(R.layout.fragment_tab_beats, container, false);
@@ -158,8 +151,8 @@ public class TabBeatsFragment extends Fragment {
             public void onItemClick(AdapterView<?> adapterView, View view, int position, long id) {
                 BeatsObject beatsObject = beatsList.get(position);
                 mPlayerAdapter.playFromList(beatsObject.getItemSamplePath());
-                // new Player().execute(beatsObject.getItemSamplePath());
-                Toast.makeText(getActivity(), "Music is playing because music functionality is added", Toast.LENGTH_SHORT).show();
+                //mMainActivity.changeMusicContent(beatsObject.getItemName(), beatsObject.getItemImageBig(),
+                        //beatsObject.getProducerName(), beatsObject.getIsLiked(), beatsObject.getItemPrice());
             }
         });
         return rootView;
