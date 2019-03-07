@@ -18,6 +18,9 @@
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
         android:layout_gravity="start"
+        app:itemIconTint="@color/drawer_item"
+        app:itemTextColor="@color/drawer_item"
+        app:itemBackground="@drawable/nav_item_drawable"
         android:fitsSystemWindows="true"
         app:headerLayout="@layout/nav_header_main"
         app:menu="@menu/activity_main_drawer">
@@ -34,14 +37,14 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="v 1.0"
+                android:text="@string/version_number"
                 android:textSize="18sp"
                 android:textColor="#121212"/>
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="© 2018 Make Hit Music, LLC."
+                android:text="@string/company_title"
                 android:textSize="14sp"
                 android:textColor="#2d2d2d"/>
 

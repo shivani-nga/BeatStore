@@ -18,6 +18,8 @@ import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
@@ -30,6 +32,9 @@ import com.makehitmusic.hiphopbeats.fragment.LibraryFragment;
 import com.makehitmusic.hiphopbeats.fragment.MoreFragment;
 import com.makehitmusic.hiphopbeats.presenter.MediaPlayerHolder;
 import com.makehitmusic.hiphopbeats.presenter.PlaybackInfoListener;
+import com.sothree.slidinguppanel.SlidingUpPanelLayout;
+import com.sothree.slidinguppanel.SlidingUpPanelLayout.PanelSlideListener;
+import com.sothree.slidinguppanel.SlidingUpPanelLayout.PanelState;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener,
@@ -68,6 +73,10 @@ public class MainActivity extends AppCompatActivity
 
     // toolbar titles respected to selected nav menu item
     private String[] activityTitles;
+
+    private SlidingUpPanelLayout mSlidingLayout;
+    LinearLayout mBottomBar;
+    LinearLayout mNowPlaying;
 
     // flag to load home fragment when user presses back key
     private boolean shouldLoadHomeFragOnBackPress = true;
@@ -111,6 +120,39 @@ public class MainActivity extends AppCompatActivity
             loadHomeFragment();
         }
 
+        mBottomBar = (LinearLayout) findViewById(R.id.bottom_bar);
+        mNowPlaying = (LinearLayout) findViewById(R.id.now_playing);
+        mSlidingLayout = (SlidingUpPanelLayout) findViewById(R.id.sliding_layout);
+        mSlidingLayout.addPanelSlideListener(new PanelSlideListener() {
+            @Override
+            public void onPanelSlide(View panel, float slideOffset) {
+                Log.i(TAG, "onPanelSlide, offset " + slideOffset);
+            }
+
+            @Override
+            public void onPanelStateChanged(View panel, PanelState previousState, PanelState newState) {
+                Log.i(TAG, "onPanelStateChanged " + newState);
+                if (newState == PanelState.EXPANDED) {
+                    mBottomBar.animate().alpha(0.0f);
+                    mBottomBar.setVisibility(View.GONE);
+                    mNowPlaying.animate().alpha(1.0f);
+                    mNowPlaying.setVisibility(View.VISIBLE);
+                }
+                else if (newState == PanelState.COLLAPSED) {
+                    mNowPlaying.animate().alpha(0.0f);
+                    mNowPlaying.setVisibility(View.GONE);
+                    mBottomBar.animate().alpha(1.0f);
+                    mBottomBar.setVisibility(View.VISIBLE);
+                }
+            }
+        });
+        mSlidingLayout.setFadeOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mSlidingLayout.setPanelState(PanelState.COLLAPSED);
+            }
+        });
+
         initializeUI();
         initializeSeekbar();
         initializePlaybackController();
@@ -138,17 +180,9 @@ public class MainActivity extends AppCompatActivity
         mBeatCover = (ImageView) findViewById(R.id.current_beat_cover);
         mBeatName = (TextView) findViewById(R.id.current_beat_name);
         mPlayButton = (ImageView) findViewById(R.id.button_play_pause);
-        mPauseButton = (ImageView) findViewById(R.id.button_pause);
         mNextButton = (ImageView) findViewById(R.id.button_next);
         mSeekbarAudio = (SeekBar) findViewById(R.id.seekbar_audio);
 
-        mPauseButton.setOnClickListener(
-                new View.OnClickListener() {
-                    @Override
-                    public void onClick(View view) {
-                        //mPlayerAdapter.pause();
-                    }
-                });
         mPlayButton.setOnClickListener(
                 new View.OnClickListener() {
                     @Override

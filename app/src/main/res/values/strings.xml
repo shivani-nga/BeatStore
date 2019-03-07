@@ -8,6 +8,9 @@
     <string name="action_settings">Settings</string>
     <string name="action_restore">Restore</string>
     <string name="action_search">Search</string>
+    <string name="action_search_by">Search By</string>
+    <string name="search_by_beat">Beat Name</string>
+    <string name="search_by_producer">Producer Name</string>
 
     <string name="tag_beats">Beats</string>
     <string name="tag_beat_producers">Beat Producers</string>
@@ -23,6 +26,9 @@
         <item>Library</item>
         <item>Account Settings</item>
     </string-array>
+
+    <string name="version_number">v 1.0</string>
+    <string name="company_title">© 2018 Make Hit Music, LLC.</string>
 
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
