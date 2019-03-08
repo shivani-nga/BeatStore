@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:card_view="http://schemas.android.com/tools"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".view.LoginScreen"
+    android:orientation="vertical"
+    android:background="@color/colorPrimary" >
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/create_account"
+        android:textAppearance="@style/TextAppearance.AppCompat.Headline"
+        android:fontFamily="sans-serif"
+        android:textAllCaps="true"
+        android:textColor="@color/colorAccent"
+        android:layout_gravity="center_horizontal"
+        android:gravity="center"
+        android:layout_marginTop="50dp"
+        android:layout_marginBottom="20dp" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/login_header"
+        android:textAppearance="@style/TextAppearance.AppCompat.Body1"
+        android:textColor="@color/colorActionBar"
+        android:layout_gravity="center_horizontal"
+        android:gravity="center"
+        android:layout_marginTop="0dp"
+        android:layout_marginBottom="40dp" />
+
+    <Button
+        android:id="@+id/facebook_login"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/login_facebook"
+        android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+        android:backgroundTint="#4b69a7"
+        android:textColor="@color/colorPrimary"
+        android:layout_gravity="center_horizontal"
+        android:gravity="center"
+        android:layout_marginStart="15dp"
+        android:layout_marginEnd="15dp"
+        android:layout_marginTop="0dp"
+        android:layout_marginBottom="10dp" />
+
+    <Button
+        android:id="@+id/google_login"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/login_google"
+        android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+        android:backgroundTint="#d95f50"
+        android:textColor="@color/colorPrimary"
+        android:layout_gravity="center_horizontal"
+        android:gravity="center"
+        android:layout_marginStart="15dp"
+        android:layout_marginEnd="15dp"
+        android:layout_marginTop="0dp"
+        android:layout_marginBottom="20dp" />
+
+    <!-- Loading indicator for user to be logged in -->
+    <ProgressBar
+        android:id="@+id/loading_indicator"
+        style="@style/Widget.AppCompat.ProgressBar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:progressBackgroundTint="@color/colorAccent"
+        android:visibility="gone"
+        android:layout_gravity="center_horizontal" />
+
+</LinearLayout>

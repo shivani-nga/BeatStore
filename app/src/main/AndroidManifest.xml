@@ -14,10 +14,10 @@
 
         <!-- Splash Screen -->
         <activity
-            android:name="com.makehitmusic.hiphopbeats.view.SplashScreen"
+            android:name=".view.SplashScreen"
             android:label="@string/app_name"
             android:screenOrientation="portrait"
-            android:theme="@android:style/Theme.Black.NoTitleBar" >
+            android:theme="@android:style/Theme.Black.NoTitleBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -25,15 +25,22 @@
             </intent-filter>
         </activity>
 
+        <!-- Login Screen -->
+        <activity
+            android:name=".view.LoginScreen"
+            android:label="@string/app_name"
+            android:theme="@android:style/Theme.Black.NoTitleBar">
+        </activity>
+
         <!-- Main Activity -->
         <activity
             android:name=".view.MainActivity"
             android:label="@string/app_name"
-            android:theme="@style/AppTheme.NoActionBar">
-        </activity>
+            android:theme="@style/AppTheme.NoActionBar"></activity>
 
         <!-- CategoryDetail Activity -->
-        <activity android:name=".view.CategoryDetailActivity"
+        <activity
+            android:name=".view.CategoryDetailActivity"
             android:label="Beats">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"

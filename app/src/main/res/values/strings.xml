@@ -11,6 +11,10 @@
     <string name="action_search_by">Search By</string>
     <string name="search_by_beat">Beat Name</string>
     <string name="search_by_producer">Producer Name</string>
+    <string name="create_account">Create Account</string>
+    <string name="login_header">View order history. Download beat purchases online.</string>
+    <string name="login_google">Log In with Google</string>
+    <string name="login_facebook">Log In with Facebook</string>
 
     <string name="tag_beats">Beats</string>
     <string name="tag_beat_producers">Beat Producers</string>

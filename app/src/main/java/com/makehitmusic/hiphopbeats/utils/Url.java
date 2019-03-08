@@ -22,13 +22,13 @@ public class Url {
     //public static String BASE_URL = "http://10.0.0.66/";
 
     // local server - Sushant's System (WiFi - Airtel@Zerotouch)
-    //public static String BASE_URL = "http://192.168.1.15/";
+    //public static String BASE_URL = "http://192.168.1.16/";
 
     // local server - Sushant's System (WiFi - Slytherin)
-    public static String BASE_URL = "http://192.168.0.103/";
+    //public static String BASE_URL = "http://192.168.0.103/";
 
     // local server - Sushant's System (WiFi - hello_moto)
-    //public static String BASE_URL = "http://192.168.43.36/";
+    public static String BASE_URL = "http://192.168.43.36/";
 
     // local server (sub url) - Any System
     public static String SUB_URL = "Dante/MHMBeats/";
