@@ -25,10 +25,10 @@ public class Url {
     //public static String BASE_URL = "http://192.168.1.16/";
 
     // local server - Sushant's System (WiFi - Slytherin)
-    //public static String BASE_URL = "http://192.168.0.103/";
+    public static String BASE_URL = "http://192.168.0.104/";
 
     // local server - Sushant's System (WiFi - hello_moto)
-    public static String BASE_URL = "http://192.168.43.36/";
+    //public static String BASE_URL = "http://192.168.43.36/";
 
     // local server (sub url) - Any System
     public static String SUB_URL = "Dante/MHMBeats/";
