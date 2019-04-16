@@ -19,6 +19,7 @@ import com.makehitmusic.hiphopbeats.view.CategoryDetailActivity;
 
 import java.util.List;
 
+import static com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions.withCrossFade;
 import static com.makehitmusic.hiphopbeats.utils.Url.BASE_URL;
 import static com.makehitmusic.hiphopbeats.utils.Url.CATEGORY_IMAGE_DEFAULT;
 
@@ -86,17 +87,17 @@ public class CategoryAdapter extends RecyclerView.Adapter<CategoryAdapter.Catego
         if (!(category.getCategoryImageLarge().equals(BASE_URL))) {
             Glide.with(mContext).load(category.getCategoryImageLarge())
                     //.placeholder(R.drawable.twotone_library_music_24)
-                    .animate(android.R.anim.fade_in).into(holder.thumbnail);
+                    .transition(withCrossFade()).into(holder.thumbnail);
         }
         else if (!(category.getCategoryImage().equals(BASE_URL))) {
             // loading cover using Glide library
             Glide.with(mContext).load(category.getCategoryImage())
                     //.placeholder(R.drawable.twotone_library_music_24)
-                    .animate(android.R.anim.fade_in).into(holder.thumbnail);
+                    .transition(withCrossFade()).into(holder.thumbnail);
         }
         else {
             Glide.with(mContext).load(CATEGORY_IMAGE_DEFAULT)
-                    .animate(android.R.anim.fade_in).into(holder.thumbnail);
+                    .transition(withCrossFade()).into(holder.thumbnail);
         }
     }
 

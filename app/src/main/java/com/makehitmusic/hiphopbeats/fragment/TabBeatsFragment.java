@@ -87,7 +87,7 @@ public class TabBeatsFragment extends Fragment {
         // Category Tab is selected now
         if (tab_position == CATEGORY_TAB && categoryId != 0) {
             Log.d("CategoryID[TabBeatFrag]", String.valueOf(categoryId));
-            Call<CategoryResponse> call = apiService.getBeatsDetails(categoryId, 114909, "false");
+            Call<CategoryResponse> call = apiService.getBeatsDetails(categoryId, 114909, "false", "true");
             call.enqueue(new Callback<CategoryResponse>() {
                 @Override
                 public void onResponse(Call<CategoryResponse> call, Response<CategoryResponse> response) {
@@ -106,7 +106,7 @@ public class TabBeatsFragment extends Fragment {
         }
         // Library Tab is selected now
         else if (tab_position == LIBRARY_TAB) {
-            Call<CategoryResponse> call = apiService.getBeatsDetails("true");
+            Call<CategoryResponse> call = apiService.getBeatsDetails("true", "true");
             call.enqueue(new Callback<CategoryResponse>() {
                 @Override
                 public void onResponse(Call<CategoryResponse> call, Response<CategoryResponse> response) {
@@ -125,7 +125,7 @@ public class TabBeatsFragment extends Fragment {
         }
         // Favorites Tab is selected now
         else if (tab_position == FAVORITES_TAB) {
-            Call<CategoryResponse> call = apiService.getBeatsDetails(114909, "false");
+            Call<CategoryResponse> call = apiService.getBeatsDetails(114909, "false", "true");
             call.enqueue(new Callback<CategoryResponse>() {
                 @Override
                 public void onResponse(Call<CategoryResponse> call, Response<CategoryResponse> response) {

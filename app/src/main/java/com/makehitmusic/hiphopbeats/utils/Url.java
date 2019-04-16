@@ -7,25 +7,25 @@ package com.makehitmusic.hiphopbeats.utils;
 public class Url {
 
     // global server - Client's End (Production Purpose)
-    //public static String BASE_URL = "https://www.makehitmusic.com/";
+    public static String BASE_URL = "https://www.makehitmusic.com/";
 
     // local server - Client's End (Testing Purpose)
     //public static String BASE_URL = "http://10.0.0.136/";
 
     // local server - Shivani's System (WiFi - Algorithm)
-    //public static String BASE_URL = "http://10.0.0.136/";
+    //public static String BASE_URL = "http://10.0.0.240/";
 
     // local server - Shivani's System (WiFi - Airtel@Zerotouch)
     //public static String BASE_URL = "http://192.168.1.5/";
 
     // local server - Sushant's System (WiFi - Algorithm)
-    //public static String BASE_URL = "http://10.0.0.66/";
+    //public static String BASE_URL = "http://10.0.0.65/";
 
     // local server - Sushant's System (WiFi - Airtel@Zerotouch)
-    //public static String BASE_URL = "http://192.168.1.16/";
+    //public static String BASE_URL = "http://192.168.1.25/";
 
     // local server - Sushant's System (WiFi - Slytherin)
-    public static String BASE_URL = "http://192.168.0.104/";
+    //public static String BASE_URL = "http://192.168.0.104/";
 
     // local server - Sushant's System (WiFi - hello_moto)
     //public static String BASE_URL = "http://192.168.43.36/";

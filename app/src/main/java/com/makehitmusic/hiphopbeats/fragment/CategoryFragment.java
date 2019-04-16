@@ -127,7 +127,7 @@ public class CategoryFragment extends Fragment {
             }
         });
 
-        Call<CategoryResponse> call = apiService.getCategory();
+        Call<CategoryResponse> call = apiService.getCategory("true");
         call.enqueue(new Callback<CategoryResponse>() {
             @Override
             public void onResponse(Call<CategoryResponse> call, Response<CategoryResponse> response) {

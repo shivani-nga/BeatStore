@@ -13,6 +13,8 @@ import com.bumptech.glide.Glide;
 import com.makehitmusic.hiphopbeats.R;
 import com.makehitmusic.hiphopbeats.model.BeatsObject;
 
+import static com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions.withCrossFade;
+
 import java.util.ArrayList;
 
 import static com.makehitmusic.hiphopbeats.utils.Url.BASE_URL;
@@ -79,12 +81,12 @@ public class TabbedBeatsAdapter extends ArrayAdapter<BeatsObject> {
         if (!(currentBeat.getItemImageBig().equals(BASE_URL))) {
             Glide.with(context).load(currentBeat.getItemImageBig())
                     //.placeholder(R.drawable.twotone_library_music_24)
-                    .animate(android.R.anim.fade_in).into(beatCover);
+                    .transition(withCrossFade()).into(beatCover);
         }
         else if (!(currentBeat.getItemImageSmall().equals(BASE_URL))) {
             Glide.with(context).load(currentBeat.getItemImageSmall())
                     //.placeholder(R.drawable.twotone_library_music_24)
-                    .animate(android.R.anim.fade_in).into(beatCover);
+                    .transition(withCrossFade()).into(beatCover);
         }
         else {
             beatCover.setImageDrawable(context.getResources().getDrawable(R.drawable.rounded_border));
