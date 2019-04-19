@@ -5,46 +5,55 @@
     xmlns:card_view="http://schemas.android.com/tools"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <android.support.v7.widget.CardView
-        android:id="@+id/card_view"
+    <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_gravity="center"
-        android:elevation="5dp"
-        card_view:cardCornerRadius="8dp">
+        android:layout_height="match_parent">
 
-        <RelativeLayout
+        <android.support.v7.widget.CardView
+            android:id="@+id/card_view"
             android:layout_width="match_parent"
-            android:layout_height="match_parent">
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:gravity="center"
+            android:elevation="5dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:layout_marginTop="5dp"
+            android:layout_marginEnd="5dp"
+            android:layout_marginRight="5dp"
+            android:layout_marginStart="5dp"
+            android:layout_marginLeft="5dp"
+            android:layout_marginBottom="5dp"
+            card_view:cardBackgroundColor="@color/colorPrimaryDark"
+            card_view:cardElevation="8dp"
+            card_view:cardCornerRadius="8dp">
 
             <ImageView
                 android:id="@+id/thumbnail"
                 android:layout_width="match_parent"
                 tools:src="@drawable/ic_launcher_background"
-                android:layout_height="70dp"
-                android:minHeight="70dp"
+                android:layout_height="75dp"
+                android:minHeight="75dp"
                 android:maxHeight="120dp"
                 android:background="?attr/selectableItemBackgroundBorderless"
-                android:clickable="true"
-                android:focusable="true"
                 android:scaleType="centerCrop"
                 />
 
-            <TextView
-                android:id="@+id/title"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_below="@id/thumbnail"
-                android:paddingLeft="5dp"
-                android:paddingRight="5dp"
-                android:paddingTop="5dp"
-                android:paddingBottom="5dp"
-                android:textColor="@color/colorActionBar"
-                android:textSize="15sp"
-                tools:text="Hip Hop"/>
+        </android.support.v7.widget.CardView>
 
-        </RelativeLayout>
+        <TextView
+            android:id="@+id/title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/card_view"
+            android:paddingLeft="5dp"
+            android:paddingRight="5dp"
+            android:paddingTop="5dp"
+            android:paddingBottom="5dp"
+            android:textColor="@color/colorActionBar"
+            android:textSize="15sp"
+            tools:text="Hip Hop"/>
 
-    </android.support.v7.widget.CardView>
+    </RelativeLayout>
 
 </LinearLayout>
