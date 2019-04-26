@@ -6,6 +6,6 @@
     <ImageView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:src="@drawable/backdrop3"
-        android:scaleType="centerCrop"/>
+        android:src="@drawable/slider_03"
+        android:scaleType="fitXY"/>
 </RelativeLayout>
