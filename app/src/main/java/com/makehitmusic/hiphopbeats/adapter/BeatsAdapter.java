@@ -1,7 +1,6 @@
 package com.makehitmusic.hiphopbeats.adapter;
 
 import android.content.Context;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -10,6 +9,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.request.RequestOptions;
 import com.makehitmusic.hiphopbeats.R;
 import com.makehitmusic.hiphopbeats.model.BeatsObject;
 
@@ -19,15 +19,15 @@ import java.util.ArrayList;
 
 import static com.makehitmusic.hiphopbeats.utils.Url.BASE_URL;
 
-public class TabbedBeatsAdapter extends ArrayAdapter<BeatsObject> {
+public class BeatsAdapter extends ArrayAdapter<BeatsObject> {
 
     /** Tag for log messages */
-    private static final String LOG_TAG = TabbedBeatsAdapter.class.getName();
+    private static final String LOG_TAG = BeatsAdapter.class.getName();
 
     private Context context;
     private ArrayList<BeatsObject> allBeats;
 
-    public TabbedBeatsAdapter(Context context, ArrayList<BeatsObject> allBeats) {
+    public BeatsAdapter(Context context, ArrayList<BeatsObject> allBeats) {
         super(context, 0, allBeats);
         this.context = context;
         this.allBeats = allBeats;
@@ -81,11 +81,13 @@ public class TabbedBeatsAdapter extends ArrayAdapter<BeatsObject> {
         if (!(currentBeat.getItemImageBig().equals(BASE_URL))) {
             Glide.with(context).load(currentBeat.getItemImageBig())
                     //.placeholder(R.drawable.twotone_library_music_24)
+                    .apply(new RequestOptions().placeholder(R.drawable.highlight_color).error(R.drawable.highlight_color))
                     .transition(withCrossFade()).into(beatCover);
         }
         else if (!(currentBeat.getItemImageSmall().equals(BASE_URL))) {
             Glide.with(context).load(currentBeat.getItemImageSmall())
                     //.placeholder(R.drawable.twotone_library_music_24)
+                    .apply(new RequestOptions().placeholder(R.drawable.highlight_color).error(R.drawable.highlight_color))
                     .transition(withCrossFade()).into(beatCover);
         }
         else {

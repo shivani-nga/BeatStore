@@ -1,18 +1,14 @@
-package com.makehitmusic.hiphopbeats.fragment;
+package com.makehitmusic.hiphopbeats.view;
 
 import android.content.Context;
-import android.net.Uri;
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
-import android.support.v7.widget.RecyclerView;
+import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.SearchView;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.Menu;
-import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.CompoundButton;
@@ -20,11 +16,9 @@ import android.widget.ListView;
 import android.widget.Switch;
 
 import com.makehitmusic.hiphopbeats.R;
-import com.makehitmusic.hiphopbeats.adapter.BeatsAdapter;
-import com.makehitmusic.hiphopbeats.adapter.CategoryAdapter;
 import com.makehitmusic.hiphopbeats.adapter.PlayerAdapter;
+import com.makehitmusic.hiphopbeats.adapter.BeatsAdapter;
 import com.makehitmusic.hiphopbeats.model.BeatsObject;
-import com.makehitmusic.hiphopbeats.model.Category;
 import com.makehitmusic.hiphopbeats.model.CategoryResponse;
 import com.makehitmusic.hiphopbeats.presenter.MediaPlayerHolder;
 import com.makehitmusic.hiphopbeats.presenter.PlaybackInfoListener;
@@ -32,27 +26,22 @@ import com.makehitmusic.hiphopbeats.rest.ApiClient;
 import com.makehitmusic.hiphopbeats.rest.ApiInterface;
 
 import java.util.ArrayList;
-import java.util.List;
 
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-/**
- * A simple {@link Fragment} subclass.
- * Activities that contain this fragment must implement the
- * {@link FavoritesFragment.OnFragmentInteractionListener} interface
- * to handle interaction events.
- * Use the {@link FavoritesFragment#newInstance} factory method to
- * create an instance of this fragment.
- */
-public class FavoritesFragment extends Fragment implements SearchView.OnQueryTextListener, MenuItem.OnActionExpandListener {
+public class BeatsActivity extends AppCompatActivity implements SearchView.OnQueryTextListener, MenuItem.OnActionExpandListener {
 
     /** Tag for log messages */
-    private static final String LOG_TAG = FavoritesFragment.class.getName();
+    private static final String LOG_TAG = BeatsActivity.class.getName();
 
+    public int categoryId;
+    public int producerId;
     ListView beatsListView;
     private int tab_position;
+    private String categoryName;
+    private String producerName;
 
     private final int CATEGORY_TAB = 1;
     private final int PRODUCERS_TAB = 2;
@@ -60,22 +49,10 @@ public class FavoritesFragment extends Fragment implements SearchView.OnQueryTex
     private final int LIBRARY_TAB = 4;
 
     private PlayerAdapter mPlayerAdapter;
-
-    public int categoryId;
     ArrayList<BeatsObject> beatsList;
 
-    // TODO: Rename parameter arguments, choose names that match
-    // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-    private static final String ARG_PARAM1 = "param1";
-    private static final String ARG_PARAM2 = "param2";
-
-    // TODO: Rename and change types of parameters
-    private String mParam1;
-    private String mParam2;
-
-    private OnFragmentInteractionListener mListener;
-
-    private Context mContext;
+    /** Adapter for the list of beats */
+    private BeatsAdapter mAdapter;
 
     SearchView searchView;
 
@@ -84,65 +61,126 @@ public class FavoritesFragment extends Fragment implements SearchView.OnQueryTex
     private boolean searchByBeats = true;
     private String searchedText = "";
 
-    public FavoritesFragment() {
-        // Required empty public constructor
-    }
-
-    /**
-     * Use this factory method to create a new instance of
-     * this fragment using the provided parameters.
-     *
-     * @return A new instance of fragment FavoritesFragment.
-     */
-    // TODO: Rename and change types and number of parameters
-    public static FavoritesFragment newInstance() {
-        FavoritesFragment fragment = new FavoritesFragment();
-        return fragment;
-    }
-
     @Override
-    public void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        mContext = getActivity();
-        setHasOptionsMenu(true);
-        if (getArguments() != null) {
-            mParam1 = getArguments().getString(ARG_PARAM1);
-            mParam2 = getArguments().getString(ARG_PARAM2);
+        setContentView(R.layout.activity_beats);
+
+//        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+//        setSupportActionBar(toolbar);
+
+        if (getIntent().hasExtra("category_id")) {
+            categoryId = Integer.parseInt(getIntent().getStringExtra("category_id"));
         }
-    }
-
-    @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
-
-        // Inflate the layout for this fragment
-        View rootView =  inflater.inflate(R.layout.activity_beats, container, false);
+        if (getIntent().hasExtra("tab_position")) {
+            tab_position = getIntent().getIntExtra("tab_position", 1);
+        }
+        if (getIntent().hasExtra("category_name")) {
+            categoryName = getIntent().getStringExtra("category_name");
+        }
+        if (getIntent().hasExtra("producer_id")) {
+            producerId = Integer.parseInt(getIntent().getStringExtra("producer_id"));
+        }
+        if (getIntent().hasExtra("producer_name")) {
+            producerName = getIntent().getStringExtra("producer_name");
+        }
+        if (tab_position == CATEGORY_TAB) {
+            setTitle(categoryName);
+        }
+        if (tab_position == PRODUCERS_TAB) {
+            setTitle(producerName);
+        }
 
         // Find the ListView which will be populated with the beats data
-        beatsListView = (ListView) rootView.findViewById(R.id.list_beats_record);
+        beatsListView = (ListView) findViewById(R.id.list_beats_record);
 
         // Find and set empty view on the ListView, so that it only shows when the list has 0 items.
-        View emptyView = rootView.findViewById(R.id.empty_view);
+        View emptyView = (View) findViewById(R.id.empty_view);
         beatsListView.setEmptyView(emptyView);
+
+        // Create a new adapter that takes an empty list of earthquakes as input
+        mAdapter = new BeatsAdapter(this, beatsList);
 
         ApiInterface apiService = ApiClient.getClient().create(ApiInterface.class);
 
-        Call<CategoryResponse> call = apiService.getBeatsDetails(114909, "false", "true");
-        call.enqueue(new Callback<CategoryResponse>() {
-            @Override
-            public void onResponse(Call<CategoryResponse> call, Response<CategoryResponse> response) {
-                int statusCode = response.code();
-                beatsList = response.body().getBeatsResults();
+        // Category Tab is selected now
+        if (tab_position == CATEGORY_TAB && categoryId != 0) {
+            Log.d("CategoryID[TabBeatFrag]", String.valueOf(categoryId));
+            Call<CategoryResponse> call = apiService.getBeatsDetails(categoryId, 114909, "false", "true");
+            call.enqueue(new Callback<CategoryResponse>() {
+                @Override
+                public void onResponse(Call<CategoryResponse> call, Response<CategoryResponse> response) {
+                    int statusCode = response.code();
+                    beatsList = response.body().getBeatsResults();
 
-                beatsListView.setAdapter(new BeatsAdapter(getActivity(), beatsList));
-            }
+                    beatsListView.setAdapter(new BeatsAdapter(BeatsActivity.this, beatsList));
+                }
 
-            @Override
-            public void onFailure(Call<CategoryResponse> call, Throwable t) {
-                // Log error here since request failed
-                Log.e(LOG_TAG, t.toString());
-            }
-        });
+                @Override
+                public void onFailure(Call<CategoryResponse> call, Throwable t) {
+                    // Log error here since request failed
+                    Log.e(LOG_TAG, t.toString());
+                }
+            });
+        }
+        // Producer's Beat Tab is selected now
+        else if (tab_position == PRODUCERS_TAB && producerId != 0) {
+            Log.d("ProducerID[BeatAct]", String.valueOf(producerId));
+            Call<CategoryResponse> call = apiService.getProducersDetails(producerId, 114909, "false", "true");
+            call.enqueue(new Callback<CategoryResponse>() {
+                @Override
+                public void onResponse(Call<CategoryResponse> call, Response<CategoryResponse> response) {
+                    int statusCode = response.code();
+                    beatsList = response.body().getBeatsResults();
+
+                    beatsListView.setAdapter(new BeatsAdapter(BeatsActivity.this, beatsList));
+                }
+
+                @Override
+                public void onFailure(Call<CategoryResponse> call, Throwable t) {
+                    // Log error here since request failed
+                    Log.e(LOG_TAG, t.toString());
+                }
+            });
+        }
+        // Library Tab is selected now
+        else if (tab_position == LIBRARY_TAB) {
+            Call<CategoryResponse> call = apiService.getBeatsDetails("true", "true");
+            call.enqueue(new Callback<CategoryResponse>() {
+                @Override
+                public void onResponse(Call<CategoryResponse> call, Response<CategoryResponse> response) {
+                    int statusCode = response.code();
+                    beatsList = response.body().getBeatsResults();
+
+                    beatsListView.setAdapter(new BeatsAdapter(BeatsActivity.this, beatsList));
+                }
+
+                @Override
+                public void onFailure(Call<CategoryResponse> call, Throwable t) {
+                    // Log error here since request failed
+                    Log.e(LOG_TAG, t.toString());
+                }
+            });
+        }
+        // Favorites Tab is selected now
+        else if (tab_position == FAVORITES_TAB) {
+            Call<CategoryResponse> call = apiService.getBeatsDetails(114909, "false", "true");
+            call.enqueue(new Callback<CategoryResponse>() {
+                @Override
+                public void onResponse(Call<CategoryResponse> call, Response<CategoryResponse> response) {
+                    int statusCode = response.code();
+                    beatsList = response.body().getBeatsResults();
+
+                    beatsListView.setAdapter(new BeatsAdapter(BeatsActivity.this, beatsList));
+                }
+
+                @Override
+                public void onFailure(Call<CategoryResponse> call, Throwable t) {
+                    // Log error here since request failed
+                    Log.e(LOG_TAG, t.toString());
+                }
+            });
+        }
 
         initializePlaybackController();
 
@@ -156,13 +194,13 @@ public class FavoritesFragment extends Fragment implements SearchView.OnQueryTex
                 //beatsObject.getProducerName(), beatsObject.getIsLiked(), beatsObject.getItemPrice());
             }
         });
-        return rootView;
+
     }
 
     private void initializePlaybackController() {
-        MediaPlayerHolder mMediaPlayerHolder = new MediaPlayerHolder(getActivity());
+        MediaPlayerHolder mMediaPlayerHolder = new MediaPlayerHolder(BeatsActivity.this);
         Log.d(LOG_TAG, "initializePlaybackController: created MediaPlayerHolder");
-        mMediaPlayerHolder.setPlaybackInfoListener(new FavoritesFragment.PlaybackListener());
+        mMediaPlayerHolder.setPlaybackInfoListener(new BeatsActivity.PlaybackListener());
         mPlayerAdapter = mMediaPlayerHolder;
         Log.d(LOG_TAG, "initializePlaybackController: MediaPlayerHolder progress callback set");
     }
@@ -193,49 +231,10 @@ public class FavoritesFragment extends Fragment implements SearchView.OnQueryTex
         }
     }
 
-    // TODO: Rename method, update argument and hook method into UI event
-    public void onButtonPressed(Uri uri) {
-        if (mListener != null) {
-            mListener.onFragmentInteraction(uri);
-        }
-    }
-
     @Override
-    public void onAttach(Context context) {
-        super.onAttach(context);
-        if (context instanceof OnFragmentInteractionListener) {
-            mListener = (OnFragmentInteractionListener) context;
-        } else {
-            throw new RuntimeException(context.toString()
-                    + " must implement OnFragmentInteractionListener");
-        }
-    }
-
-    @Override
-    public void onDetach() {
-        super.onDetach();
-        mListener = null;
-    }
-
-    /**
-     * This interface must be implemented by activities that contain this
-     * fragment to allow an interaction in this fragment to be communicated
-     * to the activity and potentially other fragments contained in that
-     * activity.
-     * <p>
-     * See the Android Training lesson <a href=
-     * "http://developer.android.com/training/basics/fragments/communicating.html"
-     * >Communicating with Other Fragments</a> for more information.
-     */
-    public interface OnFragmentInteractionListener {
-        // TODO: Update argument type and name
-        void onFragmentInteraction(Uri uri);
-    }
-
-    @Override
-    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+    public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
-        inflater.inflate(R.menu.main, menu);
+        getMenuInflater().inflate(R.menu.main, menu);
 
         final MenuItem searchItem = menu.findItem(R.id.action_search);
         final MenuItem switchItem = menu.findItem(R.id.action_toggle);
@@ -244,11 +243,23 @@ public class FavoritesFragment extends Fragment implements SearchView.OnQueryTex
         searchView.setOnQueryTextListener(this);
         searchView.setQueryHint("Beat Name");
 
+//        if (tab_position == CATEGORY_TAB) {
+//            switchItem.setVisible(true);
+//            switchView.setVisibility(View.VISIBLE);
+//        } else if (tab_position == PRODUCERS_TAB) {
+//            switchItem.setVisible(false);
+//            switchView.setVisibility(View.GONE);
+//        }
+
         searchView.setOnSearchClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Log.d("Search", "Expanded");
-                switchItem.setVisible(true);
+                if (tab_position == CATEGORY_TAB) {
+                    switchItem.setVisible(true);
+                } else if (tab_position == PRODUCERS_TAB) {
+                    switchItem.setVisible(false);
+                }
                 switchItem.setChecked(false);
                 switchView.setChecked(false);
                 searchByBeats = true;
@@ -282,9 +293,26 @@ public class FavoritesFragment extends Fragment implements SearchView.OnQueryTex
             }
         });
 
-        super.onCreateOptionsMenu(menu, inflater);
+        return true;
+    }
 
-        super.onCreateOptionsMenu(menu, inflater);
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // Handle action bar item clicks here. The action bar will
+        // automatically handle clicks on the Home/Up button, so long
+        // as you specify a parent activity in AndroidManifest.xml.
+        int id = item.getItemId();
+
+        //noinspection SimplifiableIfStatement
+        if (id == R.id.action_restore) {
+            return true;
+        }
+        //noinspection SimplifiableIfStatement
+        if (id == R.id.action_search) {
+            return true;
+        }
+
+        return super.onOptionsItemSelected(item);
     }
 
     @Override
@@ -294,9 +322,9 @@ public class FavoritesFragment extends Fragment implements SearchView.OnQueryTex
     }
 
     private void closeKeyboard() {
-        View view = getActivity().getCurrentFocus();
+        View view = this.getCurrentFocus();
         if (view != null) {
-            InputMethodManager imm = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
+            InputMethodManager imm = (InputMethodManager) this.getSystemService(Context.INPUT_METHOD_SERVICE);
             imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
         }
     }
@@ -327,13 +355,13 @@ public class FavoritesFragment extends Fragment implements SearchView.OnQueryTex
             }
         }
 
-        beatsListView.setAdapter(new BeatsAdapter(getActivity(), filteredValues));
+        beatsListView.setAdapter(new BeatsAdapter(this, filteredValues));
 
         return false;
     }
 
     public void resetSearch() {
-        beatsListView.setAdapter(new BeatsAdapter(getActivity(), beatsList));
+        beatsListView.setAdapter(new BeatsAdapter(this, beatsList));
     }
 
     public boolean performSearch(String searchedText) {
@@ -357,7 +385,7 @@ public class FavoritesFragment extends Fragment implements SearchView.OnQueryTex
             }
         }
 
-        beatsListView.setAdapter(new BeatsAdapter(getActivity(), filteredValues));
+        beatsListView.setAdapter(new BeatsAdapter(this, filteredValues));
 
         return false;
     }

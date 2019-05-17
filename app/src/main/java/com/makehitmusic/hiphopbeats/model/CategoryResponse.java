@@ -13,6 +13,9 @@ public class CategoryResponse {
     @SerializedName("Products")
     private ArrayList<BeatsObject> beatsResults;
 
+    @SerializedName("Producers")
+    private ArrayList<ProducersObject> producersResults;
+
     public List<Category> getCategoryResults() {
         return categoryResults;
     }
@@ -27,6 +30,14 @@ public class CategoryResponse {
 
     public void setBeatsResults(ArrayList<BeatsObject> beatsResults) {
         this.beatsResults = beatsResults;
+    }
+
+    public ArrayList<ProducersObject> getProducersResults() {
+        return producersResults;
+    }
+
+    public void setProducersResults(ArrayList<ProducersObject> producersResults) {
+        this.producersResults = producersResults;
     }
 
 }

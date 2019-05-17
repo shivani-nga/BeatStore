@@ -19,13 +19,12 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.RelativeLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
 import com.makehitmusic.hiphopbeats.R;
 import com.makehitmusic.hiphopbeats.adapter.PlayerAdapter;
-import com.makehitmusic.hiphopbeats.fragment.BeatProducersFragment;
+import com.makehitmusic.hiphopbeats.fragment.ProducersFragment;
 import com.makehitmusic.hiphopbeats.fragment.CategoryFragment;
 import com.makehitmusic.hiphopbeats.fragment.FavoritesFragment;
 import com.makehitmusic.hiphopbeats.fragment.LibraryFragment;
@@ -38,7 +37,7 @@ import com.sothree.slidinguppanel.SlidingUpPanelLayout.PanelState;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener,
-        CategoryFragment.OnFragmentInteractionListener, BeatProducersFragment.OnFragmentInteractionListener,
+        CategoryFragment.OnFragmentInteractionListener, ProducersFragment.OnFragmentInteractionListener,
         FavoritesFragment.OnFragmentInteractionListener,
         LibraryFragment.OnFragmentInteractionListener,
         MoreFragment.OnFragmentInteractionListener {
@@ -330,8 +329,8 @@ public class MainActivity extends AppCompatActivity
                 return categoryFragment;
             case 1:
                 // beat producers
-                BeatProducersFragment beatProducersFragment = new BeatProducersFragment();
-                return beatProducersFragment;
+                ProducersFragment producersFragment = new ProducersFragment();
+                return producersFragment;
             case 2:
                 // favorites
                 FavoritesFragment favoritesFragment = new FavoritesFragment();
@@ -366,6 +365,12 @@ public class MainActivity extends AppCompatActivity
             return;
         }
 
+//        // close search view on back button pressed
+//        if (!searchView.isIconified()) {
+//            searchView.setIconified(true);
+//            return;
+//        }
+
         // This code loads home fragment when back key is pressed
         // when user is in other fragment than home
         if (shouldLoadHomeFragOnBackPress) {
@@ -385,7 +390,7 @@ public class MainActivity extends AppCompatActivity
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.main, menu);
+//        getMenuInflater().inflate(R.menu.main, menu);
         return true;
     }
 
@@ -394,12 +399,12 @@ public class MainActivity extends AppCompatActivity
         // Handle action bar item clicks here. The action bar will
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_search) {
-            return true;
-        }
+//        int id = item.getItemId();
+//
+//        //noinspection SimplifiableIfStatement
+//        if (id == R.id.action_search) {
+//            return true;
+//        }
 
         return super.onOptionsItemSelected(item);
     }

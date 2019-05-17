@@ -1,22 +1,22 @@
 package com.makehitmusic.hiphopbeats.adapter;
 
 import android.content.Context;
-import android.content.Intent;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
-import android.text.TextUtils;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Filter;
+import android.widget.Filterable;
 import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.request.RequestOptions;
 import com.makehitmusic.hiphopbeats.R;
 import com.makehitmusic.hiphopbeats.model.Category;
-import com.makehitmusic.hiphopbeats.view.CategoryDetailActivity;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions.withCrossFade;
@@ -87,12 +87,14 @@ public class CategoryAdapter extends RecyclerView.Adapter<CategoryAdapter.Catego
         if (!(category.getCategoryImageLarge().equals(BASE_URL))) {
             Glide.with(mContext).load(category.getCategoryImageLarge())
                     //.placeholder(R.drawable.twotone_library_music_24)
+                    .apply(new RequestOptions().placeholder(R.drawable.highlight_color).error(R.drawable.highlight_color))
                     .transition(withCrossFade()).into(holder.thumbnail);
         }
         else if (!(category.getCategoryImage().equals(BASE_URL))) {
             // loading cover using Glide library
             Glide.with(mContext).load(category.getCategoryImage())
                     //.placeholder(R.drawable.twotone_library_music_24)
+                    .apply(new RequestOptions().placeholder(R.drawable.highlight_color).error(R.drawable.highlight_color))
                     .transition(withCrossFade()).into(holder.thumbnail);
         }
         else {

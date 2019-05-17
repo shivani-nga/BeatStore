@@ -10,14 +10,24 @@ import android.support.v4.app.Fragment;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.SearchView;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
+import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.Toast;
 
+import com.bartoszlipinski.recyclerviewheader2.RecyclerViewHeader;
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.request.RequestOptions;
+import com.joooonho.SelectableRoundedImageView;
 import com.makehitmusic.hiphopbeats.R;
 import com.makehitmusic.hiphopbeats.adapter.CategoryAdapter;
 import com.makehitmusic.hiphopbeats.model.Category;
@@ -25,8 +35,9 @@ import com.makehitmusic.hiphopbeats.model.CategoryResponse;
 import com.makehitmusic.hiphopbeats.presenter.JsonResponse;
 import com.makehitmusic.hiphopbeats.rest.ApiClient;
 import com.makehitmusic.hiphopbeats.rest.ApiInterface;
-import com.makehitmusic.hiphopbeats.view.CategoryDetailActivity;
+import com.makehitmusic.hiphopbeats.view.BeatsActivity;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import retrofit2.Call;
@@ -34,6 +45,9 @@ import retrofit2.Callback;
 import retrofit2.Response;
 
 import static android.support.constraint.Constraints.TAG;
+import static com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions.withCrossFade;
+import static com.makehitmusic.hiphopbeats.utils.Url.BASE_URL;
+import static com.makehitmusic.hiphopbeats.utils.Url.YOUTUBE_IMAGE_LINK;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -43,7 +57,7 @@ import static android.support.constraint.Constraints.TAG;
  * Use the {@link CategoryFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class CategoryFragment extends Fragment {
+public class CategoryFragment extends Fragment implements SearchView.OnQueryTextListener, MenuItem.OnActionExpandListener {
 
     /** Tag for log messages */
     private static final String LOG_TAG = CategoryFragment.class.getName();
@@ -60,6 +74,13 @@ public class CategoryFragment extends Fragment {
     ImageView youtubeBanner;
 
     private OnFragmentInteractionListener mListener;
+    private Context mContext;
+
+    List<Category> categoryList;
+    RecyclerView recyclerView;
+    CategoryAdapter.RecyclerViewClickListener listener;
+
+    SearchView searchView;
 
     public CategoryFragment() {
         // Required empty public constructor
@@ -80,6 +101,8 @@ public class CategoryFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        mContext = getActivity();
+        setHasOptionsMenu(true);
         if (getArguments() != null) {
             mParam1 = getArguments().getString(ARG_PARAM1);
             mParam2 = getArguments().getString(ARG_PARAM2);
@@ -93,15 +116,25 @@ public class CategoryFragment extends Fragment {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_category, container, false);
 
-        final RecyclerView recyclerView = (RecyclerView) view.findViewById(R.id.recycler_view);
+        recyclerView = (RecyclerView) view.findViewById(R.id.recycler_view);
+
+        RecyclerViewHeader header = (RecyclerViewHeader) view.findViewById(R.id.header);
 
         RecyclerView.LayoutManager mLayoutManager = new GridLayoutManager(getActivity(), 2);
         recyclerView.setLayoutManager(mLayoutManager);
 
+        header.attachTo(recyclerView);
+
         ApiInterface apiService = ApiClient.getClient().create(ApiInterface.class);
 
-        // Get YouTube video link and open video in YouTube App
+        // Get YouTube video link and image and open video in YouTube App
         youtubeBanner = view.findViewById(R.id.banner);
+
+        Glide.with(mContext).load(BASE_URL+YOUTUBE_IMAGE_LINK)
+                //.placeholder(R.drawable.twotone_library_music_24)
+                .apply(new RequestOptions().placeholder(R.drawable.youtube_logo).error(R.drawable.youtube_logo))
+                .transition(withCrossFade()).into(youtubeBanner);
+
         youtubeBanner.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view){
@@ -132,14 +165,15 @@ public class CategoryFragment extends Fragment {
             @Override
             public void onResponse(Call<CategoryResponse> call, Response<CategoryResponse> response) {
                 int statusCode = response.code();
-                final List<Category> categoryList = response.body().getCategoryResults();
+                categoryList = response.body().getCategoryResults();
 
-                CategoryAdapter.RecyclerViewClickListener listener = new CategoryAdapter.RecyclerViewClickListener() {
+                listener = new CategoryAdapter.RecyclerViewClickListener() {
                     @Override
                     public void onClick(View view, int position) {
                         Category clickedCategory = categoryList.get(position);
-                        Intent intent = new Intent(getActivity(), CategoryDetailActivity.class);
+                        Intent intent = new Intent(getActivity(), BeatsActivity.class);
                         intent.putExtra("position", position);
+                        intent.putExtra("tab_position", 1);
                         intent.putExtra("category_name", clickedCategory.getCategoryName());
                         intent.putExtra("category_id", String.valueOf(clickedCategory.getCategoryId()));
                         Log.d("CategoryID[CatAdpt]", String.valueOf(clickedCategory.getCategoryId()));
@@ -247,4 +281,83 @@ public class CategoryFragment extends Fragment {
         // TODO: Update argument type and name
         void onFragmentInteraction(Uri uri);
     }
+
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        inflater.inflate(R.menu.main, menu);
+
+        MenuItem searchItem = menu.findItem(R.id.action_search);
+        searchView = (SearchView) searchItem.getActionView();
+        searchView.setOnQueryTextListener(this);
+        searchView.setQueryHint("Category Name");
+
+        searchView.setOnSearchClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Log.d("Search", "Expanded");
+            }
+        });
+        searchView.setOnCloseListener(new SearchView.OnCloseListener() {
+            @Override
+            public boolean onClose() {
+                Log.d("Search", "Collapsed");
+                return false;
+            }
+        });
+
+        super.onCreateOptionsMenu(menu, inflater);
+
+        super.onCreateOptionsMenu(menu, inflater);
+    }
+
+    @Override
+    public boolean onQueryTextSubmit(String query) {
+        closeKeyboard();
+        return true;
+    }
+
+    private void closeKeyboard() {
+        View view = getActivity().getCurrentFocus();
+        if (view != null) {
+            InputMethodManager imm = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
+            imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+        }
+    }
+
+    @Override
+    public boolean onQueryTextChange(String newText) {
+        if (newText == null || newText.trim().isEmpty()) {
+            resetSearch();
+            return false;
+        }
+
+        List<Category> filteredValues = new ArrayList<Category>(categoryList);
+        for (Category value : categoryList) {
+            if (!value.getCategoryName().toLowerCase().contains(newText.toLowerCase())) {
+                filteredValues.remove(value);
+            }
+        }
+
+        recyclerView.setAdapter(new CategoryAdapter(filteredValues, R.layout.category_list_item, getActivity(), listener));
+
+        return false;
+    }
+
+    public void resetSearch() {
+        recyclerView.setAdapter(new CategoryAdapter(categoryList, R.layout.category_list_item, getActivity(), listener));
+    }
+
+    @Override
+    public boolean onMenuItemActionExpand(MenuItem item) {
+        Log.d("Search","Expanded");
+        return true;
+    }
+
+    @Override
+    public boolean onMenuItemActionCollapse(MenuItem item) {
+        Log.d("Search","Collapsed");
+        return true;
+    }
+
 }

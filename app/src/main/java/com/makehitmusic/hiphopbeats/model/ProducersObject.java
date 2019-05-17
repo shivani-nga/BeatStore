@@ -1,27 +1,46 @@
 package com.makehitmusic.hiphopbeats.model;
 
+import com.google.gson.annotations.SerializedName;
+
 public class ProducersObject {
 
-    private String producerCover;
-    private String producerTitle;
-    private String producerAuthor;
+    @SerializedName("producer_id")
+    private String producerId;
+    @SerializedName("producer_name")
+    private String producerName;
+    @SerializedName("producer_company_name")
+    private String producerCompanyName;
+    @SerializedName("producer_description")
+    private String producerDescription;
+    @SerializedName("producer_image")
+    private String producerImage;
 
-    public ProducersObject(String producerTitle, String producerAuthor, String producerCover) {
-        this.producerCover = producerCover;
-        this.producerAuthor = producerAuthor;
-        this.producerTitle = producerTitle;
+    public ProducersObject(String producerId, String producerName, String producerCompanyName, String producerDescription, String producerImage) {
+        this.producerId = producerId;
+        this.producerName = producerName;
+        this.producerCompanyName = producerCompanyName;
+        this.producerDescription = producerDescription;
+        this.producerImage = producerImage;
     }
 
-    public String getProducerCover() {
-        return producerCover;
+    public String getProducerId() {
+        return producerId;
     }
 
-    public String getProducerAuthor() {
-        return producerAuthor;
+    public String getProducerName() {
+        return producerName;
     }
 
-    public String getProducerTitle() {
-        return producerTitle;
+    public String getProducerCompanyName() {
+        return producerCompanyName;
+    }
+
+    public String getProducerDescription() {
+        return producerDescription;
+    }
+
+    public String getProducerImage() {
+        return producerImage;
     }
 
 }

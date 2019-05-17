@@ -1,10 +1,10 @@
 package com.makehitmusic.hiphopbeats.fragment;
 
 import android.content.Context;
+import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
-import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SearchView;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -21,18 +21,18 @@ import android.widget.Switch;
 
 import com.makehitmusic.hiphopbeats.R;
 import com.makehitmusic.hiphopbeats.adapter.BeatsAdapter;
-import com.makehitmusic.hiphopbeats.adapter.CategoryAdapter;
 import com.makehitmusic.hiphopbeats.adapter.PlayerAdapter;
+import com.makehitmusic.hiphopbeats.adapter.ProducersAdapter;
 import com.makehitmusic.hiphopbeats.model.BeatsObject;
-import com.makehitmusic.hiphopbeats.model.Category;
 import com.makehitmusic.hiphopbeats.model.CategoryResponse;
+import com.makehitmusic.hiphopbeats.model.ProducersObject;
 import com.makehitmusic.hiphopbeats.presenter.MediaPlayerHolder;
 import com.makehitmusic.hiphopbeats.presenter.PlaybackInfoListener;
 import com.makehitmusic.hiphopbeats.rest.ApiClient;
 import com.makehitmusic.hiphopbeats.rest.ApiInterface;
+import com.makehitmusic.hiphopbeats.view.BeatsActivity;
 
 import java.util.ArrayList;
-import java.util.List;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -41,17 +41,17 @@ import retrofit2.Response;
 /**
  * A simple {@link Fragment} subclass.
  * Activities that contain this fragment must implement the
- * {@link FavoritesFragment.OnFragmentInteractionListener} interface
+ * {@link ProducersFragment.OnFragmentInteractionListener} interface
  * to handle interaction events.
- * Use the {@link FavoritesFragment#newInstance} factory method to
+ * Use the {@link ProducersFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class FavoritesFragment extends Fragment implements SearchView.OnQueryTextListener, MenuItem.OnActionExpandListener {
+public class ProducersFragment extends Fragment implements SearchView.OnQueryTextListener, MenuItem.OnActionExpandListener {
 
     /** Tag for log messages */
-    private static final String LOG_TAG = FavoritesFragment.class.getName();
+    private static final String LOG_TAG = ProducersFragment.class.getName();
 
-    ListView beatsListView;
+    ListView producersListView;
     private int tab_position;
 
     private final int CATEGORY_TAB = 1;
@@ -59,10 +59,8 @@ public class FavoritesFragment extends Fragment implements SearchView.OnQueryTex
     private final int FAVORITES_TAB = 3;
     private final int LIBRARY_TAB = 4;
 
-    private PlayerAdapter mPlayerAdapter;
-
     public int categoryId;
-    ArrayList<BeatsObject> beatsList;
+    ArrayList<ProducersObject> producersList;
 
     // TODO: Rename parameter arguments, choose names that match
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
@@ -79,12 +77,7 @@ public class FavoritesFragment extends Fragment implements SearchView.OnQueryTex
 
     SearchView searchView;
 
-    Switch switchView;
-
-    private boolean searchByBeats = true;
-    private String searchedText = "";
-
-    public FavoritesFragment() {
+    public ProducersFragment() {
         // Required empty public constructor
     }
 
@@ -92,11 +85,11 @@ public class FavoritesFragment extends Fragment implements SearchView.OnQueryTex
      * Use this factory method to create a new instance of
      * this fragment using the provided parameters.
      *
-     * @return A new instance of fragment FavoritesFragment.
+     * @return A new instance of fragment ProducersFragment.
      */
     // TODO: Rename and change types and number of parameters
-    public static FavoritesFragment newInstance() {
-        FavoritesFragment fragment = new FavoritesFragment();
+    public static ProducersFragment newInstance() {
+        ProducersFragment fragment = new ProducersFragment();
         return fragment;
     }
 
@@ -116,25 +109,25 @@ public class FavoritesFragment extends Fragment implements SearchView.OnQueryTex
                              Bundle savedInstanceState) {
 
         // Inflate the layout for this fragment
-        View rootView =  inflater.inflate(R.layout.activity_beats, container, false);
+        View rootView =  inflater.inflate(R.layout.fragment_producers, container, false);
 
-        // Find the ListView which will be populated with the beats data
-        beatsListView = (ListView) rootView.findViewById(R.id.list_beats_record);
+        // Find the ListView which will be populated with the producers data
+        producersListView = (ListView) rootView.findViewById(R.id.list_producers_record);
 
         // Find and set empty view on the ListView, so that it only shows when the list has 0 items.
         View emptyView = rootView.findViewById(R.id.empty_view);
-        beatsListView.setEmptyView(emptyView);
+        producersListView.setEmptyView(emptyView);
 
         ApiInterface apiService = ApiClient.getClient().create(ApiInterface.class);
 
-        Call<CategoryResponse> call = apiService.getBeatsDetails(114909, "false", "true");
+        Call<CategoryResponse> call = apiService.getProducers("true");
         call.enqueue(new Callback<CategoryResponse>() {
             @Override
             public void onResponse(Call<CategoryResponse> call, Response<CategoryResponse> response) {
                 int statusCode = response.code();
-                beatsList = response.body().getBeatsResults();
+                producersList = response.body().getProducersResults();
 
-                beatsListView.setAdapter(new BeatsAdapter(getActivity(), beatsList));
+                producersListView.setAdapter(new ProducersAdapter(getActivity(), producersList));
             }
 
             @Override
@@ -144,53 +137,21 @@ public class FavoritesFragment extends Fragment implements SearchView.OnQueryTex
             }
         });
 
-        initializePlaybackController();
-
         // Setup the item click listener
-        beatsListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+        producersListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int position, long id) {
-                BeatsObject beatsObject = beatsList.get(position);
-                mPlayerAdapter.playFromList(beatsObject.getItemSamplePath());
-                //mMainActivity.changeMusicContent(beatsObject.getItemName(), beatsObject.getItemImageBig(),
-                //beatsObject.getProducerName(), beatsObject.getIsLiked(), beatsObject.getItemPrice());
+                ProducersObject producersObject = producersList.get(position);
+                Intent intent = new Intent(getActivity(), BeatsActivity.class);
+                intent.putExtra("position", position);
+                intent.putExtra("tab_position", 2);
+                intent.putExtra("producer_id", producersObject.getProducerId());
+                intent.putExtra("producer_name", producersObject.getProducerName());
+                getActivity().startActivity(intent);
             }
         });
         return rootView;
-    }
 
-    private void initializePlaybackController() {
-        MediaPlayerHolder mMediaPlayerHolder = new MediaPlayerHolder(getActivity());
-        Log.d(LOG_TAG, "initializePlaybackController: created MediaPlayerHolder");
-        mMediaPlayerHolder.setPlaybackInfoListener(new FavoritesFragment.PlaybackListener());
-        mPlayerAdapter = mMediaPlayerHolder;
-        Log.d(LOG_TAG, "initializePlaybackController: MediaPlayerHolder progress callback set");
-    }
-
-    public class PlaybackListener extends PlaybackInfoListener {
-
-        @Override
-        public void onDurationChanged(int duration) {
-            Log.d(LOG_TAG, String.format("setPlaybackDuration: setMax(%d)", duration));
-        }
-
-        @Override
-        public void onPositionChanged(int position) {
-            Log.d(LOG_TAG, String.format("setPlaybackPosition: setProgress(%d)", position));
-        }
-
-        @Override
-        public void onStateChanged(@State int state) {
-        }
-
-        @Override
-        public void onPlaybackCompleted() {
-        }
-
-        @Override
-        public void onLogUpdated(String message) {
-
-        }
     }
 
     // TODO: Rename method, update argument and hook method into UI event
@@ -237,48 +198,22 @@ public class FavoritesFragment extends Fragment implements SearchView.OnQueryTex
         // Inflate the menu; this adds items to the action bar if it is present.
         inflater.inflate(R.menu.main, menu);
 
-        final MenuItem searchItem = menu.findItem(R.id.action_search);
-        final MenuItem switchItem = menu.findItem(R.id.action_toggle);
+        MenuItem searchItem = menu.findItem(R.id.action_search);
         searchView = (SearchView) searchItem.getActionView();
-        switchView = (Switch) switchItem.getActionView();
         searchView.setOnQueryTextListener(this);
-        searchView.setQueryHint("Beat Name");
+        searchView.setQueryHint("Producer Name");
 
         searchView.setOnSearchClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Log.d("Search", "Expanded");
-                switchItem.setVisible(true);
-                switchItem.setChecked(false);
-                switchView.setChecked(false);
-                searchByBeats = true;
             }
         });
         searchView.setOnCloseListener(new SearchView.OnCloseListener() {
             @Override
             public boolean onClose() {
                 Log.d("Search", "Collapsed");
-                switchItem.setVisible(false);
-                switchItem.setChecked(false);
-                switchView.setChecked(false);
-                searchByBeats = true;
                 return false;
-            }
-        });
-
-        switchView.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                if (isChecked) {
-                    Log.d("Switch", "On");
-                    searchByBeats = false;
-                    searchView.setQueryHint("Producer Name");
-                    performSearch(searchedText);
-                } else {
-                    Log.d("Switch", "Off");
-                    searchByBeats = true;
-                    searchView.setQueryHint("Beat Name");
-                    performSearch(searchedText);
-                }
             }
         });
 
@@ -304,62 +239,26 @@ public class FavoritesFragment extends Fragment implements SearchView.OnQueryTex
     @Override
     public boolean onQueryTextChange(String newText) {
 
-        searchedText = newText;
-
         if (newText == null || newText.trim().isEmpty()) {
             resetSearch();
             return false;
         }
 
-        searchedText = newText;
-        ArrayList<BeatsObject> filteredValues = new ArrayList<BeatsObject>(beatsList);
-        for (BeatsObject value : beatsList) {
-            if (searchByBeats) {
-                searchView.setQueryHint("Beat Name");
-                if (!value.getItemName().toLowerCase().contains(newText.toLowerCase())) {
-                    filteredValues.remove(value);
-                }
-            } else if (!searchByBeats) {
-                searchView.setQueryHint("Producer Name");
-                if (!value.getProducerName().toLowerCase().contains(newText.toLowerCase())) {
-                    filteredValues.remove(value);
-                }
+        ArrayList<ProducersObject> filteredValues = new ArrayList<ProducersObject>(producersList);
+        for (ProducersObject value : producersList) {
+            searchView.setQueryHint("Producer Name");
+            if (!value.getProducerName().toLowerCase().contains(newText.toLowerCase())) {
+                filteredValues.remove(value);
             }
         }
 
-        beatsListView.setAdapter(new BeatsAdapter(getActivity(), filteredValues));
+        producersListView.setAdapter(new ProducersAdapter(getActivity(), filteredValues));
 
         return false;
     }
 
     public void resetSearch() {
-        beatsListView.setAdapter(new BeatsAdapter(getActivity(), beatsList));
-    }
-
-    public boolean performSearch(String searchedText) {
-        if (searchedText == null || searchedText.trim().isEmpty()) {
-            resetSearch();
-            return false;
-        }
-
-        ArrayList<BeatsObject> filteredValues = new ArrayList<BeatsObject>(beatsList);
-        for (BeatsObject value : beatsList) {
-            if (searchByBeats) {
-                searchView.setQueryHint("Beat Name");
-                if (!value.getItemName().toLowerCase().contains(searchedText.toLowerCase())) {
-                    filteredValues.remove(value);
-                }
-            } else if (!searchByBeats) {
-                searchView.setQueryHint("Producer Name");
-                if (!value.getProducerName().toLowerCase().contains(searchedText.toLowerCase())) {
-                    filteredValues.remove(value);
-                }
-            }
-        }
-
-        beatsListView.setAdapter(new BeatsAdapter(getActivity(), filteredValues));
-
-        return false;
+        producersListView.setAdapter(new ProducersAdapter(getActivity(), producersList));
     }
 
     @Override
@@ -373,4 +272,5 @@ public class FavoritesFragment extends Fragment implements SearchView.OnQueryTex
         Log.d("Search","Collapsed");
         return true;
     }
+
 }

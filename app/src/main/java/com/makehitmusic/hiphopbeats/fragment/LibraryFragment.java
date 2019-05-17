@@ -3,15 +3,36 @@ package com.makehitmusic.hiphopbeats.fragment;
 import android.content.Context;
 import android.net.Uri;
 import android.os.Bundle;
-import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
-import android.support.v4.view.ViewPager;
+import android.support.v7.widget.SearchView;
+import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
+import android.widget.AdapterView;
+import android.widget.CompoundButton;
+import android.widget.ListView;
+import android.widget.Switch;
 
 import com.makehitmusic.hiphopbeats.R;
-import com.makehitmusic.hiphopbeats.adapter.TabAdapter;
+import com.makehitmusic.hiphopbeats.adapter.BeatsAdapter;
+import com.makehitmusic.hiphopbeats.adapter.PlayerAdapter;
+import com.makehitmusic.hiphopbeats.model.BeatsObject;
+import com.makehitmusic.hiphopbeats.model.CategoryResponse;
+import com.makehitmusic.hiphopbeats.presenter.MediaPlayerHolder;
+import com.makehitmusic.hiphopbeats.presenter.PlaybackInfoListener;
+import com.makehitmusic.hiphopbeats.rest.ApiClient;
+import com.makehitmusic.hiphopbeats.rest.ApiInterface;
+
+import java.util.ArrayList;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -21,31 +42,43 @@ import com.makehitmusic.hiphopbeats.adapter.TabAdapter;
  * Use the {@link LibraryFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class LibraryFragment extends Fragment {
+public class LibraryFragment extends Fragment implements SearchView.OnQueryTextListener, MenuItem.OnActionExpandListener {
 
     /** Tag for log messages */
     private static final String LOG_TAG = LibraryFragment.class.getName();
+
+    ListView beatsListView;
+    private int tab_position;
+
+    private final int CATEGORY_TAB = 1;
+    private final int PRODUCERS_TAB = 2;
+    private final int FAVORITES_TAB = 3;
+    private final int LIBRARY_TAB = 4;
+
+    private PlayerAdapter mPlayerAdapter;
+
+    public int categoryId;
+    ArrayList<BeatsObject> beatsList;
 
     // TODO: Rename parameter arguments, choose names that match
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
     private static final String ARG_PARAM1 = "param1";
     private static final String ARG_PARAM2 = "param2";
 
-    private static final String TAG = LibraryFragment.class.getSimpleName();
-
-    private TabLayout tabLayout;
-    private ViewPager viewPager;
-    TabAdapter tabAdapter;
-    private int[] tabIcons = {
-            R.drawable.twotone_music_note_black_24,
-            R.drawable.twotone_person_black_24
-    };
-
     // TODO: Rename and change types of parameters
     private String mParam1;
     private String mParam2;
 
     private OnFragmentInteractionListener mListener;
+
+    private Context mContext;
+
+    SearchView searchView;
+
+    Switch switchView;
+
+    private boolean searchByBeats = true;
+    private String searchedText = "";
 
     public LibraryFragment() {
         // Required empty public constructor
@@ -66,6 +99,8 @@ public class LibraryFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        mContext = getActivity();
+        setHasOptionsMenu(true);
         if (getArguments() != null) {
             mParam1 = getArguments().getString(ARG_PARAM1);
             mParam2 = getArguments().getString(ARG_PARAM2);
@@ -75,24 +110,84 @@ public class LibraryFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+
         // Inflate the layout for this fragment
-        View view = inflater.inflate(R.layout.fragment_library, container, false);
+        View rootView =  inflater.inflate(R.layout.activity_beats, container, false);
 
-        tabLayout = (TabLayout)view.findViewById(R.id.tabs);
-        viewPager = (ViewPager)view.findViewById(R.id.viewpager);
+        // Find the ListView which will be populated with the beats data
+        beatsListView = (ListView) rootView.findViewById(R.id.list_beats_record);
 
-        tabAdapter = new TabAdapter(getChildFragmentManager(), 4);
+        // Find and set empty view on the ListView, so that it only shows when the list has 0 items.
+        View emptyView = rootView.findViewById(R.id.empty_view);
+        beatsListView.setEmptyView(emptyView);
 
-        viewPager.setAdapter(tabAdapter);
-        tabLayout.setupWithViewPager(viewPager);
-        setupTabIcons();
+        ApiInterface apiService = ApiClient.getClient().create(ApiInterface.class);
 
-        return view;
+        Call<CategoryResponse> call = apiService.getBeatsDetails("true", "true");
+        call.enqueue(new Callback<CategoryResponse>() {
+            @Override
+            public void onResponse(Call<CategoryResponse> call, Response<CategoryResponse> response) {
+                int statusCode = response.code();
+                beatsList = response.body().getBeatsResults();
+
+                beatsListView.setAdapter(new BeatsAdapter(getActivity(), beatsList));
+            }
+
+            @Override
+            public void onFailure(Call<CategoryResponse> call, Throwable t) {
+                // Log error here since request failed
+                Log.e(LOG_TAG, t.toString());
+            }
+        });
+
+        initializePlaybackController();
+
+        // Setup the item click listener
+        beatsListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int position, long id) {
+                BeatsObject beatsObject = beatsList.get(position);
+                mPlayerAdapter.playFromList(beatsObject.getItemSamplePath());
+                //mMainActivity.changeMusicContent(beatsObject.getItemName(), beatsObject.getItemImageBig(),
+                //beatsObject.getProducerName(), beatsObject.getIsLiked(), beatsObject.getItemPrice());
+            }
+        });
+        return rootView;
+
     }
 
-    private void setupTabIcons() {
-        tabLayout.getTabAt(0).setIcon(tabIcons[0]);
-        tabLayout.getTabAt(1).setIcon(tabIcons[1]);
+    private void initializePlaybackController() {
+        MediaPlayerHolder mMediaPlayerHolder = new MediaPlayerHolder(getActivity());
+        Log.d(LOG_TAG, "initializePlaybackController: created MediaPlayerHolder");
+        mMediaPlayerHolder.setPlaybackInfoListener(new LibraryFragment.PlaybackListener());
+        mPlayerAdapter = mMediaPlayerHolder;
+        Log.d(LOG_TAG, "initializePlaybackController: MediaPlayerHolder progress callback set");
+    }
+
+    public class PlaybackListener extends PlaybackInfoListener {
+
+        @Override
+        public void onDurationChanged(int duration) {
+            Log.d(LOG_TAG, String.format("setPlaybackDuration: setMax(%d)", duration));
+        }
+
+        @Override
+        public void onPositionChanged(int position) {
+            Log.d(LOG_TAG, String.format("setPlaybackPosition: setProgress(%d)", position));
+        }
+
+        @Override
+        public void onStateChanged(@State int state) {
+        }
+
+        @Override
+        public void onPlaybackCompleted() {
+        }
+
+        @Override
+        public void onLogUpdated(String message) {
+
+        }
     }
 
     // TODO: Rename method, update argument and hook method into UI event
@@ -133,4 +228,147 @@ public class LibraryFragment extends Fragment {
         // TODO: Update argument type and name
         void onFragmentInteraction(Uri uri);
     }
+
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        inflater.inflate(R.menu.main, menu);
+
+        final MenuItem searchItem = menu.findItem(R.id.action_search);
+        final MenuItem switchItem = menu.findItem(R.id.action_toggle);
+        searchView = (SearchView) searchItem.getActionView();
+        switchView = (Switch) switchItem.getActionView();
+        searchView.setOnQueryTextListener(this);
+        searchView.setQueryHint("Beat Name");
+
+        searchView.setOnSearchClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Log.d("Search", "Expanded");
+                switchItem.setVisible(true);
+                switchItem.setChecked(false);
+                switchView.setChecked(false);
+                searchByBeats = true;
+            }
+        });
+        searchView.setOnCloseListener(new SearchView.OnCloseListener() {
+            @Override
+            public boolean onClose() {
+                Log.d("Search", "Collapsed");
+                switchItem.setVisible(false);
+                switchItem.setChecked(false);
+                switchView.setChecked(false);
+                searchByBeats = true;
+                return false;
+            }
+        });
+
+        switchView.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if (isChecked) {
+                    Log.d("Switch", "On");
+                    searchByBeats = false;
+                    searchView.setQueryHint("Producer Name");
+                    performSearch(searchedText);
+                } else {
+                    Log.d("Switch", "Off");
+                    searchByBeats = true;
+                    searchView.setQueryHint("Beat Name");
+                    performSearch(searchedText);
+                }
+            }
+        });
+
+        super.onCreateOptionsMenu(menu, inflater);
+
+        super.onCreateOptionsMenu(menu, inflater);
+    }
+
+    @Override
+    public boolean onQueryTextSubmit(String query) {
+        closeKeyboard();
+        return true;
+    }
+
+    private void closeKeyboard() {
+        View view = getActivity().getCurrentFocus();
+        if (view != null) {
+            InputMethodManager imm = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
+            imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+        }
+    }
+
+    @Override
+    public boolean onQueryTextChange(String newText) {
+
+        searchedText = newText;
+
+        if (newText == null || newText.trim().isEmpty()) {
+            resetSearch();
+            return false;
+        }
+
+        searchedText = newText;
+        ArrayList<BeatsObject> filteredValues = new ArrayList<BeatsObject>(beatsList);
+        for (BeatsObject value : beatsList) {
+            if (searchByBeats) {
+                searchView.setQueryHint("Beat Name");
+                if (!value.getItemName().toLowerCase().contains(newText.toLowerCase())) {
+                    filteredValues.remove(value);
+                }
+            } else if (!searchByBeats) {
+                searchView.setQueryHint("Producer Name");
+                if (!value.getProducerName().toLowerCase().contains(newText.toLowerCase())) {
+                    filteredValues.remove(value);
+                }
+            }
+        }
+
+        beatsListView.setAdapter(new BeatsAdapter(getActivity(), filteredValues));
+
+        return false;
+    }
+
+    public void resetSearch() {
+        beatsListView.setAdapter(new BeatsAdapter(getActivity(), beatsList));
+    }
+
+    public boolean performSearch(String searchedText) {
+        if (searchedText == null || searchedText.trim().isEmpty()) {
+            resetSearch();
+            return false;
+        }
+
+        ArrayList<BeatsObject> filteredValues = new ArrayList<BeatsObject>(beatsList);
+        for (BeatsObject value : beatsList) {
+            if (searchByBeats) {
+                searchView.setQueryHint("Beat Name");
+                if (!value.getItemName().toLowerCase().contains(searchedText.toLowerCase())) {
+                    filteredValues.remove(value);
+                }
+            } else if (!searchByBeats) {
+                searchView.setQueryHint("Producer Name");
+                if (!value.getProducerName().toLowerCase().contains(searchedText.toLowerCase())) {
+                    filteredValues.remove(value);
+                }
+            }
+        }
+
+        beatsListView.setAdapter(new BeatsAdapter(getActivity(), filteredValues));
+
+        return false;
+    }
+
+    @Override
+    public boolean onMenuItemActionExpand(MenuItem item) {
+        Log.d("Search","Expanded");
+        return true;
+    }
+
+    @Override
+    public boolean onMenuItemActionCollapse(MenuItem item) {
+        Log.d("Search","Collapsed");
+        return true;
+    }
+
 }
