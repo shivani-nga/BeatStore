@@ -11,10 +11,10 @@
     <color name="tan_background">#FFF7DA</color>
 
     <!-- dots inactive colors -->
-    <color name="dot_dark_screen">#b5c4c4c4</color>
+    <color name="dot_dark_screen">#8c6983d3</color>
 
     <!-- dots active colors -->
-    <color name="dot_light_screen">#ffffff</color>
+    <color name="dot_light_screen">#c3295a98</color>
 
     <array name="array_dot_active">
         <item>@color/dot_light_screen</item>

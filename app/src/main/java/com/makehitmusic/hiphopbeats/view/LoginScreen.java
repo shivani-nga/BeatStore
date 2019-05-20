@@ -52,7 +52,7 @@ import retrofit2.Response;
 public class LoginScreen extends Activity implements
         View.OnClickListener {
 
-    Button facebookButton, googleButton;
+    Button facebookButton, googleButton, skipButton;
     View loadingIndicator;
     Bitmap bm;
 
@@ -68,10 +68,24 @@ public class LoginScreen extends Activity implements
 
         facebookButton = (Button) findViewById(R.id.facebook_login);
         googleButton = (Button) findViewById(R.id.google_login);
+        skipButton = (Button) findViewById(R.id.btn_not_now);
 
         loadingIndicator = findViewById(R.id.loading_indicator);
 
         googleButton.setOnClickListener(this);
+
+        skipButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                View loadingIndicator = findViewById(R.id.loading_indicator);
+                loadingIndicator.setVisibility(View.VISIBLE);
+                Intent i = new Intent(LoginScreen.this, MainActivity.class);
+                startActivity(i);
+
+                // close this activity
+                finish();
+            }
+        });
 
         facebookButton.setOnClickListener(new View.OnClickListener() {
             @Override

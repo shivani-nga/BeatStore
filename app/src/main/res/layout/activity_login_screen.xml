@@ -73,4 +73,19 @@
         android:visibility="gone"
         android:layout_gravity="center_horizontal" />
 
+    <Button
+        android:id="@+id/btn_not_now"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_gravity="center_horizontal"
+        android:gravity="bottom"
+        android:focusable="true"
+        android:clickable="true"
+        android:background="@null"
+        android:layout_margin="20dp"
+        android:text="Not Now, Browse Beats"
+        android:textColor="@color/colorAccent"
+        android:textAllCaps="false"
+        android:textAppearance="@style/TextAppearance.AppCompat.Medium" />
+
 </LinearLayout>

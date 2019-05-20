@@ -12,28 +12,28 @@ import retrofit2.http.Query;
 
 public interface ApiInterface {
 
-    @GET("Dante/MHMBeats/categories.php")
+    @GET("mhmbeats/categories.php")
     Call<CategoryResponse> getCategory(@Query("android") String trueAndroid);
 
-    @GET("Dante/MHMBeats/products.php")
+    @GET("mhmbeats/products.php")
     Call<CategoryResponse> getBeatsDetails(@Query("category_id") int categoryId,
                                            @Query("userid") int userId,
                                            @Query("latest") String latestBeats,
                                            @Query("android") String trueAndroid);
 
-    @GET("Dante/MHMBeats/products.php")
+    @GET("mhmbeats/products.php")
     Call<CategoryResponse> getBeatsDetails(@Query("userid") int userId,
                                            @Query("latest") String latestBeats,
                                            @Query("android") String trueAndroid);
 
-    @GET("Dante/MHMBeats/products.php")
+    @GET("mhmbeats/products.php")
     Call<CategoryResponse> getBeatsDetails(@Query("purchase") String purchasedBeats,
                                            @Query("android") String trueAndroid);
 
-    @GET("Dante/MHMBeats/producers.php")
+    @GET("mhmbeats/producers.php")
     Call<CategoryResponse> getProducers(@Query("android") String trueAndroid);
 
-    @GET("Dante/MHMBeats/products.php")
+    @GET("mhmbeats/products.php")
     Call<CategoryResponse> getProducersDetails(@Query("producer_id") int producerId,
                                                @Query("userid") int userId,
                                                @Query("latest") String latestBeats,
@@ -42,7 +42,7 @@ public interface ApiInterface {
     @GET("video/youTube.json")
     Call<JsonResponse> getYoutubeLink();
 
-    @POST("Dante/MHMBeats/social_login.php")
+    @POST("mhmbeats/social_login.php")
     Call<LoginResponse> postUserLogin(@Query("email") String emailId,
                                       @Query("username") String userName,
                                       @Query("firstname") String firstName,

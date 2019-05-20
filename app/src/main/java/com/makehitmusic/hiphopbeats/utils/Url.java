@@ -7,10 +7,10 @@ package com.makehitmusic.hiphopbeats.utils;
 public class Url {
 
     // global server - Client's End (Production Purpose)
-    //public static String BASE_URL = "http://www.makehitmusic.com/";
+    public static String BASE_URL = "http://www.makehitmusic.com/";
 
     // local server - Client's End (Testing Purpose)
-    public static String BASE_URL = "http://10.0.0.136/";
+    //public static String BASE_URL = "http://10.0.0.136/";
 
     // local server - Shivani's System (WiFi - Algorithm)
     //public static String BASE_URL = "http://10.0.0.240/";
@@ -31,10 +31,10 @@ public class Url {
     //public static String BASE_URL = "http://192.168.43.36/";
 
     // local server (sub url) - Any System
-    public static String SUB_URL = "Dante/MHMBeats/";
+    //public static String SUB_URL = "Dante/MHMBeats/";
 
     // global server (sub url) - Production System
-    //public static String SUB_URL = "mhmbeats/";
+    public static String SUB_URL = "mhmbeats/";
 
      // List of APIs
 
