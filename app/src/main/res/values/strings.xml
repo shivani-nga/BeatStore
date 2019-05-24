@@ -24,6 +24,12 @@
     <string name="tag_library">Library</string>
     <string name="tag_account_settings">Account Settings</string>
 
+    <string name="read_more_tag">Read More</string>
+    <string name="read_less_tag">Read Less</string>
+
+    <string name="empty_view_text">It\'s a bit lonely here…</string>
+    <string name="no_internet">No internet connection.</string>
+
     <!-- Toolbar titles when navigation menu item is selected -->
     <string-array name="nav_item_titles">
         <item>Beats</item>
@@ -42,5 +48,45 @@
     <!-- Server Client ID.  This should be a valid Web OAuth 2.0 Client ID obtained
          from https://console.developers.google.com/ -->
     <string name="server_client_id">878344980190-juhjeoakvvp5q15l1j49g2c329iph8p2.apps.googleusercontent.com</string>
+
+    <!-- Facebook App ID -->
+    <string name="facebook_app_id">2326506384058206</string>
+    <string name="fb_login_protocol_scheme">fb[2326506384058206]</string>
+
+    <string name="preference_login">LoginPreferences</string>
+
+    <!-- Settings Screen Headers -->
+    <string name="head_profile">Profile</string>
+    <string name="head_purchases">In App Purchases</string>
+    <string name="head_apps">Other Apps By MakeHitMusic.Com</string>
+    <string name="head_others">Others</string>
+
+    <!-- Settings Screen Subheaders -->
+    <string name="subhead_logout">Logout</string>
+    <string name="subhead_purchases">Restore Purchases</string>
+    <string name="subhead_license">Beat Licensing FAQs</string>
+    <string name="subhead_apps">Free Hip Hop Studio Recording App</string>
+    <string name="subhead_sell">How Can I Sell My Beats?</string>
+    <string name="subhead_idea">Turn Your App Idea Into Reality!</string>
+    <string name="subhead_review">Write A Review</string>
+    <string name="subhead_support">Contact Support</string>
+    <string name="subhead_terms">Terms Of Use</string>
+    <string name="subhead_policy">Privacy Policy</string>
+
+    <!-- Settings Screen Keys -->
+    <string name="key_logout">key_logout</string>
+    <string name="key_purchases">key_purchases</string>
+    <string name="key_license">key_license</string>
+    <string name="key_apps">key_apps</string>
+    <string name="key_sell">key_sell</string>
+    <string name="key_idea">key_idea</string>
+    <string name="key_review">key_review</string>
+    <string name="key_support">key_support</string>
+    <string name="key_terms">key_terms</string>
+    <string name="key_policy">key_policy</string>
+
+    <!-- Settings Screen Summary -->
+    <string name="summary_purchases">Restore your previously purchased beats</string>
+    <string name="summary_apps">Take your music to the next level with this all in one studio designed for especially for rappers</string>
 
 </resources>

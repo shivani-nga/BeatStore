@@ -2,6 +2,8 @@ package com.makehitmusic.hiphopbeats.fragment;
 
 import android.content.Context;
 import android.content.Intent;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -16,8 +18,12 @@ import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.CompoundButton;
+import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.ProgressBar;
+import android.widget.RelativeLayout;
 import android.widget.Switch;
+import android.widget.TextView;
 
 import com.makehitmusic.hiphopbeats.R;
 import com.makehitmusic.hiphopbeats.adapter.BeatsAdapter;
@@ -61,6 +67,12 @@ public class ProducersFragment extends Fragment implements SearchView.OnQueryTex
 
     public int categoryId;
     ArrayList<ProducersObject> producersList;
+
+    ProgressBar progressBar;
+
+    RelativeLayout emptyView;
+    ImageView emptyImage;
+    TextView emptyText;
 
     // TODO: Rename parameter arguments, choose names that match
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
@@ -114,9 +126,33 @@ public class ProducersFragment extends Fragment implements SearchView.OnQueryTex
         // Find the ListView which will be populated with the producers data
         producersListView = (ListView) rootView.findViewById(R.id.list_producers_record);
 
-        // Find and set empty view on the ListView, so that it only shows when the list has 0 items.
-        View emptyView = rootView.findViewById(R.id.empty_view);
-        producersListView.setEmptyView(emptyView);
+        progressBar = (ProgressBar) rootView.findViewById(R.id.loading_indicator);
+        emptyView = (RelativeLayout) rootView.findViewById(R.id.empty_view);
+        emptyImage = (ImageView) rootView.findViewById(R.id.empty_image);
+        emptyText = (TextView) rootView.findViewById(R.id.empty_text);
+
+        // Get a reference to the ConnectivityManager to check state of network connectivity
+        ConnectivityManager connMgr = (ConnectivityManager)
+                mContext.getSystemService(Context.CONNECTIVITY_SERVICE);
+
+        // Get details on the currently active default data network
+        NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
+
+        // If there is a network connection, fetch data
+        if (networkInfo != null && networkInfo.isConnected()) {
+            progressBar.setVisibility(View.VISIBLE);
+        } else {
+            progressBar.setVisibility(View.GONE);
+            emptyView.setVisibility(View.VISIBLE);
+            emptyImage.setVisibility(View.VISIBLE);
+            emptyText.setVisibility(View.VISIBLE);
+            emptyImage.setImageResource(R.drawable.no_internet);
+            emptyText.setText(R.string.no_internet);
+        }
+
+//        // Find and set empty view on the ListView, so that it only shows when the list has 0 items.
+//        View emptyView = rootView.findViewById(R.id.empty_view);
+//        producersListView.setEmptyView(emptyView);
 
         ApiInterface apiService = ApiClient.getClient().create(ApiInterface.class);
 
@@ -124,8 +160,21 @@ public class ProducersFragment extends Fragment implements SearchView.OnQueryTex
         call.enqueue(new Callback<CategoryResponse>() {
             @Override
             public void onResponse(Call<CategoryResponse> call, Response<CategoryResponse> response) {
+                progressBar.setVisibility(View.GONE);
                 int statusCode = response.code();
                 producersList = response.body().getProducersResults();
+
+                if (producersList.isEmpty()) {
+                    emptyView.setVisibility(View.VISIBLE);
+                    emptyImage.setVisibility(View.VISIBLE);
+                    emptyText.setVisibility(View.VISIBLE);
+                    emptyImage.setImageResource(R.drawable.empty_view);
+                    emptyText.setText(R.string.empty_view_text);
+                } else {
+                    emptyView.setVisibility(View.GONE);
+                    emptyImage.setVisibility(View.GONE);
+                    emptyText.setVisibility(View.GONE);
+                }
 
                 producersListView.setAdapter(new ProducersAdapter(getActivity(), producersList));
             }
@@ -134,6 +183,13 @@ public class ProducersFragment extends Fragment implements SearchView.OnQueryTex
             public void onFailure(Call<CategoryResponse> call, Throwable t) {
                 // Log error here since request failed
                 Log.e(LOG_TAG, t.toString());
+
+                progressBar.setVisibility(View.GONE);
+                emptyView.setVisibility(View.VISIBLE);
+                emptyImage.setVisibility(View.VISIBLE);
+                emptyText.setVisibility(View.VISIBLE);
+                emptyImage.setImageResource(R.drawable.no_internet);
+                emptyText.setText(R.string.no_internet);
             }
         });
 
@@ -147,6 +203,8 @@ public class ProducersFragment extends Fragment implements SearchView.OnQueryTex
                 intent.putExtra("tab_position", 2);
                 intent.putExtra("producer_id", producersObject.getProducerId());
                 intent.putExtra("producer_name", producersObject.getProducerName());
+                intent.putExtra("producer_description", producersObject.getProducerDescription());
+                intent.putExtra("producer_image", producersObject.getProducerImage());
                 getActivity().startActivity(intent);
             }
         });

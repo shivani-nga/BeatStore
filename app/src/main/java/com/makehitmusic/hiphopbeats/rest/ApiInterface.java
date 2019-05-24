@@ -1,10 +1,12 @@
 package com.makehitmusic.hiphopbeats.rest;
 
 import com.makehitmusic.hiphopbeats.model.CategoryResponse;
+import com.makehitmusic.hiphopbeats.model.LoginRequest;
 import com.makehitmusic.hiphopbeats.model.LoginResponse;
 import com.makehitmusic.hiphopbeats.presenter.JsonResponse;
 
 import retrofit2.Call;
+import retrofit2.http.Body;
 import retrofit2.http.GET;
 import retrofit2.http.POST;
 import retrofit2.http.Path;
@@ -43,13 +45,6 @@ public interface ApiInterface {
     Call<JsonResponse> getYoutubeLink();
 
     @POST("mhmbeats/social_login.php")
-    Call<LoginResponse> postUserLogin(@Query("email") String emailId,
-                                      @Query("username") String userName,
-                                      @Query("firstname") String firstName,
-                                      @Query("lastname") String lastName,
-                                      @Query("userID") String userId,
-                                      @Query("idToken") String idToken,
-                                      @Query("loginType") String loginType,
-                                      @Query("photo") String photo);
+    Call<LoginResponse> postUserLogin(@Body LoginRequest loginRequest);
 
 }

@@ -1,20 +1,31 @@
 package com.makehitmusic.hiphopbeats.view;
 
 import android.content.Context;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.CompoundButton;
+import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.ProgressBar;
+import android.widget.RelativeLayout;
 import android.widget.Switch;
+import android.widget.TextView;
 
+import com.borjabravo.readmoretextview.ReadMoreTextView;
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.request.RequestOptions;
 import com.makehitmusic.hiphopbeats.R;
 import com.makehitmusic.hiphopbeats.adapter.PlayerAdapter;
 import com.makehitmusic.hiphopbeats.adapter.BeatsAdapter;
@@ -31,6 +42,8 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
+import static com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions.withCrossFade;
+
 public class BeatsActivity extends AppCompatActivity implements SearchView.OnQueryTextListener, MenuItem.OnActionExpandListener {
 
     /** Tag for log messages */
@@ -42,6 +55,8 @@ public class BeatsActivity extends AppCompatActivity implements SearchView.OnQue
     private int tab_position;
     private String categoryName;
     private String producerName;
+    private String producerDescription;
+    private String producerImage;
 
     private final int CATEGORY_TAB = 1;
     private final int PRODUCERS_TAB = 2;
@@ -57,6 +72,12 @@ public class BeatsActivity extends AppCompatActivity implements SearchView.OnQue
     SearchView searchView;
 
     Switch switchView;
+
+    ProgressBar progressBar;
+
+    RelativeLayout emptyView;
+    ImageView emptyImage;
+    TextView emptyText;
 
     private boolean searchByBeats = true;
     private String searchedText = "";
@@ -84,6 +105,12 @@ public class BeatsActivity extends AppCompatActivity implements SearchView.OnQue
         if (getIntent().hasExtra("producer_name")) {
             producerName = getIntent().getStringExtra("producer_name");
         }
+        if (getIntent().hasExtra("producer_description")) {
+            producerDescription = getIntent().getStringExtra("producer_description");
+        }
+        if (getIntent().hasExtra("producer_image")) {
+            producerImage = getIntent().getStringExtra("producer_image");
+        }
         if (tab_position == CATEGORY_TAB) {
             setTitle(categoryName);
         }
@@ -94,9 +121,61 @@ public class BeatsActivity extends AppCompatActivity implements SearchView.OnQue
         // Find the ListView which will be populated with the beats data
         beatsListView = (ListView) findViewById(R.id.list_beats_record);
 
-        // Find and set empty view on the ListView, so that it only shows when the list has 0 items.
-        View emptyView = (View) findViewById(R.id.empty_view);
-        beatsListView.setEmptyView(emptyView);
+        progressBar = (ProgressBar) findViewById(R.id.loading_indicator);
+        emptyView = (RelativeLayout) findViewById(R.id.empty_view);
+        emptyImage = (ImageView) findViewById(R.id.empty_image);
+        emptyText = (TextView) findViewById(R.id.empty_text);
+
+        // Get a reference to the ConnectivityManager to check state of network connectivity
+        ConnectivityManager connMgr = (ConnectivityManager)
+                getSystemService(Context.CONNECTIVITY_SERVICE);
+
+        // Get details on the currently active default data network
+        NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
+
+        // If there is a network connection, fetch data
+        if (networkInfo != null && networkInfo.isConnected()) {
+            progressBar.setVisibility(View.VISIBLE);
+        } else {
+            progressBar.setVisibility(View.GONE);
+            emptyView.setVisibility(View.VISIBLE);
+            emptyImage.setVisibility(View.VISIBLE);
+            emptyText.setVisibility(View.VISIBLE);
+            emptyImage.setImageResource(R.drawable.no_internet);
+            emptyText.setText(R.string.no_internet);
+        }
+
+//        // Find and set empty view on the ListView, so that it only shows when the list has 0 items.
+//        View emptyView = (View) findViewById(R.id.empty_view);
+//        beatsListView.setEmptyView(emptyView);
+
+        if (tab_position == PRODUCERS_TAB) {
+
+            // Initialize Header
+            LayoutInflater inflater = getLayoutInflater();
+            ViewGroup header = (ViewGroup) inflater.inflate(R.layout.listview_header, beatsListView, false);
+
+            ImageView producerCover = (ImageView) header.findViewById(R.id.producer_cover);
+            TextView producerTitle = (TextView) header.findViewById(R.id.producer_title);
+            ReadMoreTextView producerInfo = (ReadMoreTextView) header.findViewById(R.id.producer_info);
+
+            if (!(producerImage.equals(""))) {
+                Glide.with(this).load(producerImage)
+                        //.placeholder(R.drawable.twotone_library_music_24)
+                        .apply(new RequestOptions().placeholder(R.drawable.highlight_color).error(R.drawable.highlight_color))
+                        .transition(withCrossFade()).into(producerCover);
+            }
+            else {
+                producerCover.setImageDrawable(this.getResources().getDrawable(R.drawable.rounded_border));
+            }
+
+            producerTitle.setText(producerName);
+            producerInfo.setText(producerDescription);
+
+            // Add a header to the ListView
+            beatsListView.addHeaderView(header);
+
+        }
 
         // Create a new adapter that takes an empty list of earthquakes as input
         mAdapter = new BeatsAdapter(this, beatsList);
@@ -110,8 +189,21 @@ public class BeatsActivity extends AppCompatActivity implements SearchView.OnQue
             call.enqueue(new Callback<CategoryResponse>() {
                 @Override
                 public void onResponse(Call<CategoryResponse> call, Response<CategoryResponse> response) {
+                    progressBar.setVisibility(View.GONE);
                     int statusCode = response.code();
                     beatsList = response.body().getBeatsResults();
+
+                    if (beatsList.isEmpty()) {
+                        emptyView.setVisibility(View.VISIBLE);
+                        emptyImage.setVisibility(View.VISIBLE);
+                        emptyText.setVisibility(View.VISIBLE);
+                        emptyImage.setImageResource(R.drawable.empty_view);
+                        emptyText.setText(R.string.empty_view_text);
+                    } else {
+                        emptyView.setVisibility(View.GONE);
+                        emptyImage.setVisibility(View.GONE);
+                        emptyText.setVisibility(View.GONE);
+                    }
 
                     beatsListView.setAdapter(new BeatsAdapter(BeatsActivity.this, beatsList));
                 }
@@ -120,6 +212,13 @@ public class BeatsActivity extends AppCompatActivity implements SearchView.OnQue
                 public void onFailure(Call<CategoryResponse> call, Throwable t) {
                     // Log error here since request failed
                     Log.e(LOG_TAG, t.toString());
+
+                    progressBar.setVisibility(View.GONE);
+                    emptyView.setVisibility(View.VISIBLE);
+                    emptyImage.setVisibility(View.VISIBLE);
+                    emptyText.setVisibility(View.VISIBLE);
+                    emptyImage.setImageResource(R.drawable.no_internet);
+                    emptyText.setText(R.string.no_internet);
                 }
             });
         }
@@ -130,8 +229,21 @@ public class BeatsActivity extends AppCompatActivity implements SearchView.OnQue
             call.enqueue(new Callback<CategoryResponse>() {
                 @Override
                 public void onResponse(Call<CategoryResponse> call, Response<CategoryResponse> response) {
+                    progressBar.setVisibility(View.GONE);
                     int statusCode = response.code();
                     beatsList = response.body().getBeatsResults();
+
+                    if (beatsList.isEmpty()) {
+                        emptyView.setVisibility(View.VISIBLE);
+                        emptyImage.setVisibility(View.VISIBLE);
+                        emptyText.setVisibility(View.VISIBLE);
+                        emptyImage.setImageResource(R.drawable.empty_view);
+                        emptyText.setText(R.string.empty_view_text);
+                    } else {
+                        emptyView.setVisibility(View.GONE);
+                        emptyImage.setVisibility(View.GONE);
+                        emptyText.setVisibility(View.GONE);
+                    }
 
                     beatsListView.setAdapter(new BeatsAdapter(BeatsActivity.this, beatsList));
                 }
@@ -140,6 +252,18 @@ public class BeatsActivity extends AppCompatActivity implements SearchView.OnQue
                 public void onFailure(Call<CategoryResponse> call, Throwable t) {
                     // Log error here since request failed
                     Log.e(LOG_TAG, t.toString());
+
+                    if (beatsList.isEmpty()) {
+                        emptyView.setVisibility(View.VISIBLE);
+                        emptyImage.setVisibility(View.VISIBLE);
+                        emptyText.setVisibility(View.VISIBLE);
+                        emptyImage.setImageResource(R.drawable.empty_view);
+                        emptyText.setText(R.string.empty_view_text);
+                    } else {
+                        emptyView.setVisibility(View.GONE);
+                        emptyImage.setVisibility(View.GONE);
+                        emptyText.setVisibility(View.GONE);
+                    }
                 }
             });
         }
@@ -149,8 +273,21 @@ public class BeatsActivity extends AppCompatActivity implements SearchView.OnQue
             call.enqueue(new Callback<CategoryResponse>() {
                 @Override
                 public void onResponse(Call<CategoryResponse> call, Response<CategoryResponse> response) {
+                    progressBar.setVisibility(View.GONE);
                     int statusCode = response.code();
                     beatsList = response.body().getBeatsResults();
+
+                    if (beatsList.isEmpty()) {
+                        emptyView.setVisibility(View.VISIBLE);
+                        emptyImage.setVisibility(View.VISIBLE);
+                        emptyText.setVisibility(View.VISIBLE);
+                        emptyImage.setImageResource(R.drawable.empty_view);
+                        emptyText.setText(R.string.empty_view_text);
+                    } else {
+                        emptyView.setVisibility(View.GONE);
+                        emptyImage.setVisibility(View.GONE);
+                        emptyText.setVisibility(View.GONE);
+                    }
 
                     beatsListView.setAdapter(new BeatsAdapter(BeatsActivity.this, beatsList));
                 }
@@ -159,6 +296,18 @@ public class BeatsActivity extends AppCompatActivity implements SearchView.OnQue
                 public void onFailure(Call<CategoryResponse> call, Throwable t) {
                     // Log error here since request failed
                     Log.e(LOG_TAG, t.toString());
+
+                    if (beatsList.isEmpty()) {
+                        emptyView.setVisibility(View.VISIBLE);
+                        emptyImage.setVisibility(View.VISIBLE);
+                        emptyText.setVisibility(View.VISIBLE);
+                        emptyImage.setImageResource(R.drawable.empty_view);
+                        emptyText.setText(R.string.empty_view_text);
+                    } else {
+                        emptyView.setVisibility(View.GONE);
+                        emptyImage.setVisibility(View.GONE);
+                        emptyText.setVisibility(View.GONE);
+                    }
                 }
             });
         }
@@ -168,8 +317,21 @@ public class BeatsActivity extends AppCompatActivity implements SearchView.OnQue
             call.enqueue(new Callback<CategoryResponse>() {
                 @Override
                 public void onResponse(Call<CategoryResponse> call, Response<CategoryResponse> response) {
+                    progressBar.setVisibility(View.GONE);
                     int statusCode = response.code();
                     beatsList = response.body().getBeatsResults();
+
+                    if (beatsList.isEmpty()) {
+                        emptyView.setVisibility(View.VISIBLE);
+                        emptyImage.setVisibility(View.VISIBLE);
+                        emptyText.setVisibility(View.VISIBLE);
+                        emptyImage.setImageResource(R.drawable.empty_view);
+                        emptyText.setText(R.string.empty_view_text);
+                    } else {
+                        emptyView.setVisibility(View.GONE);
+                        emptyImage.setVisibility(View.GONE);
+                        emptyText.setVisibility(View.GONE);
+                    }
 
                     beatsListView.setAdapter(new BeatsAdapter(BeatsActivity.this, beatsList));
                 }
@@ -178,6 +340,18 @@ public class BeatsActivity extends AppCompatActivity implements SearchView.OnQue
                 public void onFailure(Call<CategoryResponse> call, Throwable t) {
                     // Log error here since request failed
                     Log.e(LOG_TAG, t.toString());
+
+                    if (beatsList.isEmpty()) {
+                        emptyView.setVisibility(View.VISIBLE);
+                        emptyImage.setVisibility(View.VISIBLE);
+                        emptyText.setVisibility(View.VISIBLE);
+                        emptyImage.setImageResource(R.drawable.empty_view);
+                        emptyText.setText(R.string.empty_view_text);
+                    } else {
+                        emptyView.setVisibility(View.GONE);
+                        emptyImage.setVisibility(View.GONE);
+                        emptyText.setVisibility(View.GONE);
+                    }
                 }
             });
         }

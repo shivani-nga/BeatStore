@@ -1,9 +1,12 @@
 package com.makehitmusic.hiphopbeats.view;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -17,8 +20,19 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.request.target.CustomTarget;
 import com.bumptech.glide.request.target.SimpleTarget;
 import com.bumptech.glide.request.transition.Transition;
+import com.facebook.AccessToken;
+import com.facebook.CallbackManager;
+import com.facebook.FacebookCallback;
+import com.facebook.FacebookException;
+import com.facebook.GraphRequest;
+import com.facebook.GraphResponse;
+import com.facebook.Profile;
+import com.facebook.login.LoginManager;
+import com.facebook.login.LoginResult;
+import com.facebook.login.widget.LoginButton;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
@@ -33,9 +47,13 @@ import com.makehitmusic.hiphopbeats.R;
 import com.makehitmusic.hiphopbeats.adapter.CategoryAdapter;
 import com.makehitmusic.hiphopbeats.model.Category;
 import com.makehitmusic.hiphopbeats.model.CategoryResponse;
+import com.makehitmusic.hiphopbeats.model.LoginRequest;
 import com.makehitmusic.hiphopbeats.model.LoginResponse;
 import com.makehitmusic.hiphopbeats.rest.ApiClient;
 import com.makehitmusic.hiphopbeats.rest.ApiInterface;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -43,6 +61,7 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Arrays;
 import java.util.List;
 
 import retrofit2.Call;
@@ -52,12 +71,46 @@ import retrofit2.Response;
 public class LoginScreen extends Activity implements
         View.OnClickListener {
 
-    Button facebookButton, googleButton, skipButton;
+    Button googleButton, skipButton;
+    Button facebookButton;
     View loadingIndicator;
-    Bitmap bm;
+
+    GoogleSignInAccount account;
+    String emailIdG = "";
+    String userNameG = "";
+    String firstNameG = "";
+    String lastNameG = "";
+    String userIdG = "";
+    String idTokenG = "";
+    String loginTypeG = "";
+    String photoUrlG = "";
+    String encodedImageG = "";
+
+    String emailIdF = "";
+    String userNameF = "";
+    String firstNameF = "";
+    String lastNameF = "";
+    String userIdF = "";
+    String idTokenF = "";
+    String loginTypeF = "";
+    String photoUrlF;
+    String encodedImageF = "";
+
+    private AccessToken mAccessToken;
+    private CallbackManager mCallbackManager;
+
+    private int loginTypeInt = 0;
 
     private static final String TAG = "IdTokenActivity";
     private static final int RC_GET_TOKEN = 9002;
+
+    private static final String EMAIL = "email";
+    private static final String PUBLIC_PROFILE = "public_profile";
+    private static final String USER_BIRTHDAY = "user_birthday";
+    private static final String USER_PHOTOS = "user_photos";
+    private static final String USER_LOCATION = "user_location";
+    private static final String AUTH_TYPE = "rerequest";
+
 
     private GoogleSignInClient mGoogleSignInClient;
 
@@ -74,9 +127,19 @@ public class LoginScreen extends Activity implements
 
         googleButton.setOnClickListener(this);
 
+        mCallbackManager = CallbackManager.Factory.create();
+
         skipButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                loginTypeInt = 0;
+
+                SharedPreferences.Editor loginPreferences = getSharedPreferences("LoginPreferences", MODE_PRIVATE).edit();
+                loginPreferences.putInt("LoginType", 0);
+                loginPreferences.putInt("UserCode", 0);
+                loginPreferences.putInt("UserId", 0);
+                loginPreferences.apply();
+
                 View loadingIndicator = findViewById(R.id.loading_indicator);
                 loadingIndicator.setVisibility(View.VISIBLE);
                 Intent i = new Intent(LoginScreen.this, MainActivity.class);
@@ -90,13 +153,34 @@ public class LoginScreen extends Activity implements
         facebookButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                loginTypeInt = 2;
                 View loadingIndicator = findViewById(R.id.loading_indicator);
                 loadingIndicator.setVisibility(View.VISIBLE);
-                Intent i = new Intent(LoginScreen.this, MainActivity.class);
-                startActivity(i);
+                LoginManager.getInstance().logInWithReadPermissions(LoginScreen.this, Arrays.asList(EMAIL, PUBLIC_PROFILE, USER_BIRTHDAY, USER_PHOTOS, USER_LOCATION));
+            }
+        });
 
-                // close this activity
-                finish();
+        // Callback registration
+        LoginManager.getInstance().registerCallback(mCallbackManager,
+                new FacebookCallback<LoginResult>() {
+            @Override
+            public void onSuccess(LoginResult loginResult) {
+                // App code
+                setResult(RESULT_OK);
+                mAccessToken = loginResult.getAccessToken();
+                getUserProfile(mAccessToken);
+                Log.d("LoginSuccess", mAccessToken.toString());
+            }
+
+            @Override
+            public void onCancel() {
+                // App code
+                setResult(RESULT_CANCELED);
+            }
+
+            @Override
+            public void onError(FacebookException exception) {
+                // App code
             }
         });
 
@@ -114,6 +198,61 @@ public class LoginScreen extends Activity implements
 
         // Build GoogleAPIClient with the Google Sign-In API and the above options.
         mGoogleSignInClient = GoogleSignIn.getClient(this, gso);
+    }
+
+    private void getUserProfile(final AccessToken currentAccessToken) {
+        GraphRequest request = GraphRequest.newMeRequest(
+                currentAccessToken,
+                new GraphRequest.GraphJSONObjectCallback() {
+                    @Override
+                    public void onCompleted(JSONObject object, GraphResponse response) {
+                        try {
+                            Log.d("Response1", object.toString());
+                            Log.d("Response2", response.getJSONObject().toString());
+                            //You can fetch user info like this…
+                            emailIdF = object.getString("email");
+                            userNameF = object.getString("name");
+                            if(userNameF.split("\\w+").length > 1) {
+                                lastNameF = userNameF.substring(userNameF.lastIndexOf(" ") + 1);
+                                firstNameF = userNameF.substring(0, userNameF.lastIndexOf(' '));
+                            }
+                            else {
+                                firstNameF = userNameF;
+                            }
+                            userIdF = object.getString("id");
+                            idTokenF = currentAccessToken.toString();
+                            loginTypeF = "Facebook";
+                            photoUrlF = object.getJSONObject("picture").
+                                    getJSONObject("data").getString("url");
+
+                            // Loading image using Glide
+                            Glide.with(LoginScreen.this)
+                                    .asBitmap()
+                                    .load(photoUrlF)
+                                    .into(new CustomTarget<Bitmap>() {
+                                        @Override
+                                        public void onResourceReady(@NonNull Bitmap resource, @NonNull Transition<? super Bitmap> transition) {
+                                            encodedImageF = convertToEncode(resource);
+                                            Log.d("Image", encodedImageF);
+                                            makeApiCall();
+                                            Toast.makeText(LoginScreen.this, "Signed in as: " + userNameF, Toast.LENGTH_SHORT).show();
+                                        }
+
+                                        @Override
+                                        public void onLoadCleared(@Nullable Drawable placeholder) {
+
+                                        }
+                                    });
+
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                });
+        Bundle parameters = new Bundle();
+        parameters.putString("fields", "id,name,email,picture.width(200)");
+        request.setParameters(parameters);
+        request.executeAsync();
     }
 
     private void getIdToken() {
@@ -147,116 +286,135 @@ public class LoginScreen extends Activity implements
     // [START handle_sign_in_result]
     private void handleSignInResult(@NonNull Task<GoogleSignInAccount> completedTask) throws IOException {
         try {
-            GoogleSignInAccount account = completedTask.getResult(ApiException.class);
-            String emailId = account.getEmail();
-            String userName = account.getDisplayName();
+            account = completedTask.getResult(ApiException.class);
+            emailIdG = account.getEmail();
+            userNameG = account.getDisplayName();
 
-            String firstName= "";
-            String lastName = "";
-            if(userName.split("\\w+").length > 1) {
-                lastName = userName.substring(userName.lastIndexOf(" ") + 1);
-                firstName = userName.substring(0, userName.lastIndexOf(' '));
+            if(userNameG.split("\\w+").length > 1) {
+                lastNameG = userNameG.substring(userNameG.lastIndexOf(" ") + 1);
+                firstNameG = userNameG.substring(0, userNameG.lastIndexOf(' '));
             }
             else {
-                firstName = userName;
+                firstNameG = userNameG;
             }
 
-            String userId = account.getId();
-            String idToken = account.getIdToken();
-            String loginType = "Google";
-            String photoUrl = String.valueOf(account.getPhotoUrl());
-            String encodedImage = "";
+            userIdG = account.getId();
+            idTokenG = account.getIdToken();
+            loginTypeG = "Google";
+            photoUrlG = String.valueOf(account.getPhotoUrl());
 
             // Loading image using Glide
             Glide.with(this)
                     .asBitmap()
-                    .load(photoUrl)
-                    .into(new SimpleTarget<Bitmap>() {
+                    .load(photoUrlG)
+                    .into(new CustomTarget<Bitmap>() {
                         @Override
-                        public void onResourceReady(Bitmap resource, Transition<? super Bitmap> transition) {
-                            bm = resource;
+                        public void onResourceReady(@NonNull Bitmap resource, @NonNull Transition<? super Bitmap> transition) {
+                            encodedImageG = convertToEncode(resource);
+                            Log.d("Image", encodedImageG);
+                            makeApiCall();
+                        }
+
+                        @Override
+                        public void onLoadCleared(@Nullable Drawable placeholder) {
+
                         }
                     });
 
-//            HttpURLConnection con = null;
-//            InputStream is = null;
-//            try {
-//                URL urlPhoto = new URL(photoUrl);
-//
-//                con = (HttpURLConnection)urlPhoto.openConnection();
-//                con.setReadTimeout(10000 /* milliseconds */);
-//                con.setConnectTimeout(15000 /* milliseconds */);
-//                con.setRequestMethod("GET");
-//                con.connect();
-//
-//                // If the request was successful (response code 200),
-//                // then read the input stream and parse the response.
-//                if (con.getResponseCode() == 200) {
-//                    is = con.getInputStream();
-//                    Bitmap bm = BitmapFactory.decodeStream(is);
-//                    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-//                    bm.compress(Bitmap.CompressFormat.JPEG, 100, baos); //bm is the bitmap object
-//                    byte[] byteArrayImage = baos.toByteArray();
-//                    encodedImage = Base64.encodeToString(byteArrayImage, Base64.DEFAULT);
-//                } else {
-//                    Log.e(TAG, "Error response code: " + con.getResponseCode());
-//                }
-//            }
-//            catch (Exception e) {
-//                e.printStackTrace();
-//                Log.e(TAG, "Problem retrieving the earthquake JSON results.", e);
-//            } finally {
-//                if (con != null) {
-//                    con.disconnect();
-//                }
-//                if (is != null) {
-//                    // Closing the input stream could throw an IOException, which is why
-//                    // the makeHttpRequest(URL url) method signature specifies than an IOException
-//                    // could be thrown.
-//                    is.close();
-//                }
-//            }
-
-            Log.d("EmailId", emailId);
-            Log.d("UserName", userName);
-            Log.d("FirstName", firstName);
-            Log.d("LastName", lastName);
-            Log.d("UserId", userId);
-            Log.d("TokenId", idToken);
-            Log.d("PhotoURL", photoUrl);
-            Log.d("LoginType", loginType);
-            Log.d("EncodedImage", encodedImage);
-
-            // TODO(developer): send ID Token to server and validate
-
-            ApiInterface apiService = ApiClient.getClient().create(ApiInterface.class);
-
-            Call<LoginResponse> call = apiService.postUserLogin(emailId, userName, firstName, lastName,
-                    userId, idToken, loginType, encodedImage);
-            call.enqueue(new Callback<LoginResponse>() {
-                @Override
-                public void onResponse(Call<LoginResponse> call, Response<LoginResponse> response) {
-                    int statusCode = response.code();
-                    final int userCode = response.body().getUserCode();
-                    final int userId = response.body().getUserId();
-                    Log.d("UserCode", String.valueOf(userCode));
-                    Log.d("UserId", String.valueOf(userId));
-                }
-
-                @Override
-                public void onFailure(Call<LoginResponse> call, Throwable t) {
-                    // Log error here since request failed
-                    Log.e(TAG, t.toString());
-                }
-            });
-
-            updateUI(account);
         } catch (ApiException e) {
             Log.w(TAG, "handleSignInResult:error", e);
             updateUI(null);
         }
     }
     // [END handle_sign_in_result]
+
+    public void makeApiCall() {
+
+        if (loginTypeInt == 1) {
+            Log.d("EmailId", emailIdG);
+            Log.d("UserName", userNameG);
+            Log.d("FirstName", firstNameG);
+            Log.d("LastName", lastNameG);
+            Log.d("UserId", userIdG);
+            Log.d("TokenId", idTokenG);
+            Log.d("PhotoURL", photoUrlG);
+            Log.d("LoginType", loginTypeG);
+            Log.d("UserImage", encodedImageG);
+        } else if (loginTypeInt == 2) {
+            Log.d("EmailId", emailIdF);
+            Log.d("UserName", userNameF);
+            Log.d("FirstName", firstNameF);
+            Log.d("LastName", lastNameF);
+            Log.d("UserId", userIdF);
+            Log.d("TokenId", idTokenF);
+            Log.d("PhotoURL", photoUrlF);
+            Log.d("LoginType", loginTypeF);
+            Log.d("UserImage", encodedImageF);
+        }
+
+        // TODO(developer): send ID Token to server and validate
+
+        ApiInterface apiService = ApiClient.getClient().create(ApiInterface.class);
+        LoginRequest loginRequest = null;
+
+        if (loginTypeInt == 1) {
+            loginRequest = new LoginRequest(emailIdG, userNameG, firstNameG, lastNameG, userIdG, idTokenG,
+                    loginTypeG, encodedImageG);
+        } else if (loginTypeInt == 2) {
+            loginRequest = new LoginRequest(emailIdF, userNameF, firstNameF, lastNameF, userIdF, idTokenF,
+                    loginTypeF, encodedImageF);
+        }
+
+        Call<LoginResponse> call = apiService.postUserLogin(loginRequest);
+        call.enqueue(new Callback<LoginResponse>() {
+            @Override
+            public void onResponse(Call<LoginResponse> call, Response<LoginResponse> response) {
+                int statusCode = response.code();
+                final int userCode = response.body().getUserCode();
+                final int userId = response.body().getUserId();
+
+                SharedPreferences sharedPref = LoginScreen.this.getSharedPreferences(
+                        getString(R.string.preference_login), Context.MODE_PRIVATE);
+                SharedPreferences.Editor editor = sharedPref.edit();
+                editor.putInt("LoginType", loginTypeInt);
+                editor.putInt("UserCode", userCode);
+                editor.putInt("UserId", userId);
+                editor.apply();
+
+                Log.d("UserCode", String.valueOf(userCode));
+                Log.d("UserId", String.valueOf(userId));
+            }
+
+            @Override
+            public void onFailure(Call<LoginResponse> call, Throwable t) {
+                // Log error here since request failed
+                Log.e(TAG, t.toString());
+            }
+        });
+
+        if (loginTypeInt == 1) {
+            updateUI(account);
+        } else if (loginTypeInt == 2) {
+            launchApp();
+        }
+
+    }
+
+    public String convertToEncode(Bitmap inputBitmap) {
+
+        String outputString = "";
+
+        try {
+            ByteArrayOutputStream oStream = new ByteArrayOutputStream();
+            inputBitmap.compress(Bitmap.CompressFormat.JPEG, 90, oStream);
+
+            byte[] byteArray = oStream.toByteArray();
+            outputString = Base64.encodeToString(byteArray, Base64.DEFAULT);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return outputString;
+    }
 
     private void signOut() {
         mGoogleSignInClient.signOut().addOnCompleteListener(this, new OnCompleteListener<Void>() {
@@ -280,19 +438,23 @@ public class LoginScreen extends Activity implements
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-
-        Log.d("RequestCode", String.valueOf(requestCode));
-        if (requestCode == RC_GET_TOKEN) {
-            // [START get_id_token]
-            // This task is always completed immediately, there is no need to attach an
-            // asynchronous listener.
-            Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(data);
-            try {
-                handleSignInResult(task);
-            } catch (IOException e) {
-                Log.e(TAG, "Problem making the HTTP request.", e);
+        if (loginTypeInt == 2) {
+            mCallbackManager.onActivityResult(requestCode, resultCode, data);
+        }
+        else if (loginTypeInt == 1) {
+            Log.d("RequestCode", String.valueOf(requestCode));
+            if (requestCode == RC_GET_TOKEN) {
+                // [START get_id_token]
+                // This task is always completed immediately, there is no need to attach an
+                // asynchronous listener.
+                Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(data);
+                try {
+                    handleSignInResult(task);
+                } catch (IOException e) {
+                    Log.e(TAG, "Problem making the HTTP request.", e);
+                }
+                // [END get_id_token]
             }
-            // [END get_id_token]
         }
     }
 
@@ -324,6 +486,21 @@ public class LoginScreen extends Activity implements
         finish();
     }
 
+    public static Bitmap getBitmapFromURL(String src) {
+        try {
+            URL url = new URL(src);
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setDoInput(true);
+            connection.connect();
+            InputStream input = connection.getInputStream();
+            Bitmap myBitmap = BitmapFactory.decodeStream(input);
+            return myBitmap;
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
     /**
      * Validates that there is a reasonable server client ID in strings.xml, this is only needed
      * to make sure users of this sample follow the README.
@@ -343,6 +520,7 @@ public class LoginScreen extends Activity implements
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.google_login:
+                loginTypeInt = 1;
                 getIdToken();
                 break;
 //            case R.id.sign_out_button:
@@ -355,5 +533,11 @@ public class LoginScreen extends Activity implements
 //                refreshIdToken();
 //                break;
         }
+    }
+
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        finish();
     }
 }

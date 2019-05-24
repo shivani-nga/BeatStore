@@ -34,6 +34,8 @@
         android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true"
         android:background="@null"
+        android:focusable="true"
+        android:clickable="true"
         android:layout_margin="20dp"
         android:text="Get Started"
         android:textColor="@color/colorAccent"

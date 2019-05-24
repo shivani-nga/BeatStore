@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="horizontal"
+    android:padding="10dp">
+
+    <ImageView
+        android:id="@+id/producer_cover"
+        android:layout_width="0dp"
+        android:layout_height="100dp"
+        android:layout_weight="3"
+        android:layout_gravity="top"
+        android:gravity="center"
+        tools:src="@drawable/ic_launcher_background"
+        android:scaleType="centerCrop"
+        android:layout_marginEnd="10dp"
+        android:background="@drawable/rounded_border" />
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="7"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/producer_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="22sp"
+            android:layout_gravity="top|start"
+            android:maxLines="1"
+            android:ellipsize="end"
+            android:textColor="@color/colorActionBar"
+            tools:text="Beat Name"/>
+
+        <com.borjabravo.readmoretextview.ReadMoreTextView
+            android:id="@+id/producer_info"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:trimCollapsedText="@string/read_more_tag"
+            app:trimExpandedText="@string/read_less_tag"
+            app:trimMode="trimModeLine"
+            app:trimLines="4"
+            app:showTrimExpandedText="true"
+            app:colorClickableText="@color/colorAccent"
+            android:textSize="16sp"
+            android:layout_gravity="center_vertical"
+            android:textColor="@color/colorPrimaryDark"
+            tools:text="The producer description goes here with upto 4 wrapped lines to text. The producer description goes here with upto 4 wrapped lines to text. The producer description goes here with upto 4 wrapped lines to text."/>
+
+    </LinearLayout>
+
+</LinearLayout>

@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:title="@string/tag_account_settings">
+
+    <PreferenceCategory android:title="@string/head_profile">
+        <Preference
+            android:key="@string/key_logout"
+            android:title="@string/subhead_logout" />
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="@string/head_purchases">
+        <Preference
+            android:key="@string/key_purchases"
+            android:title="@string/subhead_purchases"
+            android:summary="@string/summary_purchases" />
+
+        <Preference
+            android:key="@string/key_license"
+            android:title="@string/subhead_license" />
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="@string/head_apps">
+        <Preference
+            android:key="@string/key_apps"
+            android:title="@string/subhead_apps"
+            android:summary="@string/summary_apps" />
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="@string/head_others">
+        <Preference
+            android:key="@string/key_sell"
+            android:title="@string/subhead_sell" />
+
+        <Preference
+            android:key="@string/key_idea"
+            android:title="@string/subhead_idea" />
+
+        <Preference
+            android:key="@string/key_review"
+            android:title="@string/subhead_review" />
+
+        <Preference
+            android:key="@string/key_support"
+            android:title="@string/subhead_support" />
+
+        <Preference
+            android:key="@string/key_terms"
+            android:title="@string/subhead_terms" />
+
+        <Preference
+            android:key="@string/key_policy"
+            android:title="@string/subhead_policy" />
+
+        <Preference
+            />
+
+        <Preference
+            />
+    </PreferenceCategory>
+
+</PreferenceScreen>

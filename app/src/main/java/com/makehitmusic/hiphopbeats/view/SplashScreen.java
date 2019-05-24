@@ -3,10 +3,12 @@ package com.makehitmusic.hiphopbeats.view;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.preference.PreferenceManager;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.text.Html;
@@ -19,6 +21,7 @@ import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import com.facebook.AccessToken;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.common.Scopes;
@@ -36,6 +39,12 @@ public class SplashScreen extends Activity {
 
     // Identifier to check whether user is logged in or not
     public boolean isLoggedIn = false;
+
+    // Identifier to check whether user is logged in using Google or not
+    public boolean isGoogleLoggedIn = false;
+
+    // Identifier to check whether user is logged in using Facebook or not
+    public boolean isFacebookLoggedIn = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -76,20 +85,54 @@ public class SplashScreen extends Activity {
             }
         });
 
+        // Check if the user is already signed in using Facebook
+
+//        AccessToken accessToken = AccessToken.getCurrentAccessToken();
+//        if (accessToken != null && !accessToken.isExpired()) {
+//            isFacebookLoggedIn = accessToken != null && !accessToken.isExpired();
+//            launchHomeScreen();
+//        } else {
+//            isFacebookLoggedIn = false;
+//        }
+
     }
 
     @Override
     public void onStart() {
         super.onStart();
 
-        // Check if the user is already signed in and all required scopes are granted
-        GoogleSignInAccount account = GoogleSignIn.getLastSignedInAccount(this);
-        if (account != null && GoogleSignIn.hasPermissions(account, new Scope(Scopes.DRIVE_APPFOLDER))) {
+        SharedPreferences sharedPref = SplashScreen.this.getSharedPreferences(
+                getString(R.string.preference_login), Context.MODE_PRIVATE);
+        int loginTypeInt = sharedPref.getInt("LoginType", 0);
+        int userCode = sharedPref.getInt("UserCode", 0);
+        int userId = sharedPref.getInt("UserId", 0);
+
+        if (userCode != 0 && userId != 0) {
             isLoggedIn = true;
             launchHomeScreen();
         } else {
             isLoggedIn = false;
         }
+
+        // Check if the user is already signed in and all required scopes are granted
+        GoogleSignInAccount account = GoogleSignIn.getLastSignedInAccount(this);
+        if (account != null && GoogleSignIn.hasPermissions(account, new Scope(Scopes.DRIVE_APPFOLDER))) {
+            isGoogleLoggedIn = true;
+            launchHomeScreen();
+        } else {
+            isGoogleLoggedIn = false;
+        }
+
+        // Check if the user is already signed in using Facebook
+
+        AccessToken accessToken = AccessToken.getCurrentAccessToken();
+        if (accessToken != null && !accessToken.isExpired()) {
+            isFacebookLoggedIn = accessToken != null && !accessToken.isExpired();
+            launchHomeScreen();
+        } else {
+            isFacebookLoggedIn = false;
+        }
+
     }
 
     private void addBottomDots(int currentPage) {
@@ -116,11 +159,11 @@ public class SplashScreen extends Activity {
     }
 
     private void launchHomeScreen() {
-        if (isLoggedIn) {
+        if (isLoggedIn || isGoogleLoggedIn || isFacebookLoggedIn) {
             // User is already logged in so load MainActivity
             Intent i = new Intent(SplashScreen.this, MainActivity.class);
             startActivity(i);
-        } else if (!isLoggedIn) {
+        } else if (!isLoggedIn && !isGoogleLoggedIn && !isFacebookLoggedIn) {
             // User is not logged in so load LoginScreen
             Intent i = new Intent(SplashScreen.this, LoginScreen.class);
             startActivity(i);

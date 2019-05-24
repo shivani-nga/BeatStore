@@ -1,9 +1,12 @@
 package com.makehitmusic.hiphopbeats.fragment;
 
+import android.app.LoaderManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.Resources;
 import android.graphics.Rect;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -22,6 +25,9 @@ import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
+import android.widget.RelativeLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.bartoszlipinski.recyclerviewheader2.RecyclerViewHeader;
@@ -72,6 +78,11 @@ public class CategoryFragment extends Fragment implements SearchView.OnQueryText
     private String mParam2;
 
     ImageView youtubeBanner;
+    ProgressBar progressBar;
+
+    RelativeLayout emptyView;
+    ImageView emptyImage;
+    TextView emptyText;
 
     private OnFragmentInteractionListener mListener;
     private Context mContext;
@@ -116,7 +127,30 @@ public class CategoryFragment extends Fragment implements SearchView.OnQueryText
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_category, container, false);
 
+        progressBar = (ProgressBar) view.findViewById(R.id.loading_indicator);
         recyclerView = (RecyclerView) view.findViewById(R.id.recycler_view);
+        emptyView = (RelativeLayout) view.findViewById(R.id.empty_view);
+        emptyImage = (ImageView) view.findViewById(R.id.empty_image);
+        emptyText = (TextView) view.findViewById(R.id.empty_text);
+
+        // Get a reference to the ConnectivityManager to check state of network connectivity
+        ConnectivityManager connMgr = (ConnectivityManager)
+                mContext.getSystemService(Context.CONNECTIVITY_SERVICE);
+
+        // Get details on the currently active default data network
+        NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
+
+        // If there is a network connection, fetch data
+        if (networkInfo != null && networkInfo.isConnected()) {
+            progressBar.setVisibility(View.VISIBLE);
+        } else {
+            progressBar.setVisibility(View.GONE);
+            emptyView.setVisibility(View.VISIBLE);
+            emptyImage.setVisibility(View.VISIBLE);
+            emptyText.setVisibility(View.VISIBLE);
+            emptyImage.setImageResource(R.drawable.no_internet);
+            emptyText.setText(R.string.no_internet);
+        }
 
         RecyclerViewHeader header = (RecyclerViewHeader) view.findViewById(R.id.header);
 
@@ -164,8 +198,21 @@ public class CategoryFragment extends Fragment implements SearchView.OnQueryText
         call.enqueue(new Callback<CategoryResponse>() {
             @Override
             public void onResponse(Call<CategoryResponse> call, Response<CategoryResponse> response) {
+                progressBar.setVisibility(View.GONE);
                 int statusCode = response.code();
                 categoryList = response.body().getCategoryResults();
+
+                if (categoryList.isEmpty()) {
+                    emptyView.setVisibility(View.VISIBLE);
+                    emptyImage.setVisibility(View.VISIBLE);
+                    emptyText.setVisibility(View.VISIBLE);
+                    emptyImage.setImageResource(R.drawable.empty_view);
+                    emptyText.setText(R.string.empty_view_text);
+                } else {
+                    emptyView.setVisibility(View.GONE);
+                    emptyImage.setVisibility(View.GONE);
+                    emptyText.setVisibility(View.GONE);
+                }
 
                 listener = new CategoryAdapter.RecyclerViewClickListener() {
                     @Override
@@ -188,6 +235,13 @@ public class CategoryFragment extends Fragment implements SearchView.OnQueryText
             public void onFailure(Call<CategoryResponse> call, Throwable t) {
                 // Log error here since request failed
                 Log.e(TAG, t.toString());
+
+                progressBar.setVisibility(View.GONE);
+                emptyView.setVisibility(View.VISIBLE);
+                emptyImage.setVisibility(View.VISIBLE);
+                emptyText.setVisibility(View.VISIBLE);
+                emptyImage.setImageResource(R.drawable.no_internet);
+                emptyText.setText(R.string.no_internet);
             }
         });
 
