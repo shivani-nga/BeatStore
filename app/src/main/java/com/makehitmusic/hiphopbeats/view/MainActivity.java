@@ -31,9 +31,6 @@ import com.makehitmusic.hiphopbeats.fragment.LibraryFragment;
 import com.makehitmusic.hiphopbeats.fragment.MoreFragment;
 import com.makehitmusic.hiphopbeats.presenter.MediaPlayerHolder;
 import com.makehitmusic.hiphopbeats.presenter.PlaybackInfoListener;
-import com.sothree.slidinguppanel.SlidingUpPanelLayout;
-import com.sothree.slidinguppanel.SlidingUpPanelLayout.PanelSlideListener;
-import com.sothree.slidinguppanel.SlidingUpPanelLayout.PanelState;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener,
@@ -45,7 +42,6 @@ public class MainActivity extends AppCompatActivity
     public static final String TAG = "MainActivity";
     public static final int MEDIA_RES_ID = R.raw.jazz_in_paris;
 
-    private SeekBar mSeekbarAudio;
     private PlayerAdapter mPlayerAdapter;
     private boolean mUserIsSeeking = false;
 
@@ -72,10 +68,6 @@ public class MainActivity extends AppCompatActivity
 
     // toolbar titles respected to selected nav menu item
     private String[] activityTitles;
-
-    private SlidingUpPanelLayout mSlidingLayout;
-    LinearLayout mBottomBar;
-    LinearLayout mNowPlaying;
 
     // flag to load home fragment when user presses back key
     private boolean shouldLoadHomeFragOnBackPress = true;
@@ -119,41 +111,6 @@ public class MainActivity extends AppCompatActivity
             loadHomeFragment();
         }
 
-        mBottomBar = (LinearLayout) findViewById(R.id.bottom_bar);
-        mNowPlaying = (LinearLayout) findViewById(R.id.now_playing);
-        mSlidingLayout = (SlidingUpPanelLayout) findViewById(R.id.sliding_layout);
-        mSlidingLayout.addPanelSlideListener(new PanelSlideListener() {
-            @Override
-            public void onPanelSlide(View panel, float slideOffset) {
-                Log.i(TAG, "onPanelSlide, offset " + slideOffset);
-            }
-
-            @Override
-            public void onPanelStateChanged(View panel, PanelState previousState, PanelState newState) {
-                Log.i(TAG, "onPanelStateChanged " + newState);
-                if (newState == PanelState.EXPANDED) {
-                    mBottomBar.animate().alpha(0.0f);
-                    mBottomBar.setVisibility(View.GONE);
-                    mNowPlaying.animate().alpha(1.0f);
-                    mNowPlaying.setVisibility(View.VISIBLE);
-                }
-                else if (newState == PanelState.COLLAPSED) {
-                    mNowPlaying.animate().alpha(0.0f);
-                    mNowPlaying.setVisibility(View.GONE);
-                    mBottomBar.animate().alpha(1.0f);
-                    mBottomBar.setVisibility(View.VISIBLE);
-                }
-            }
-        });
-        mSlidingLayout.setFadeOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                mSlidingLayout.setPanelState(PanelState.COLLAPSED);
-            }
-        });
-
-        initializeUI();
-        initializeSeekbar();
         initializePlaybackController();
     }
 
@@ -175,29 +132,6 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    private void initializeUI() {
-        mBeatCover = (ImageView) findViewById(R.id.current_beat_cover);
-        mBeatName = (TextView) findViewById(R.id.current_beat_name);
-        mPlayButton = (ImageView) findViewById(R.id.button_play_pause);
-        mNextButton = (ImageView) findViewById(R.id.button_next);
-        mSeekbarAudio = (SeekBar) findViewById(R.id.seekbar_audio);
-
-        mPlayButton.setOnClickListener(
-                new View.OnClickListener() {
-                    @Override
-                    public void onClick(View view) {
-                        //mPlayerAdapter.play();
-                    }
-                });
-        mNextButton.setOnClickListener(
-                new View.OnClickListener() {
-                    @Override
-                    public void onClick(View view) {
-                        //mPlayerAdapter.reset();
-                    }
-                });
-    }
-
     private void initializePlaybackController() {
         MediaPlayerHolder mMediaPlayerHolder = new MediaPlayerHolder(this);
         Log.d(TAG, "initializePlaybackController: created MediaPlayerHolder");
@@ -206,43 +140,16 @@ public class MainActivity extends AppCompatActivity
         Log.d(TAG, "initializePlaybackController: MediaPlayerHolder progress callback set");
     }
 
-    private void initializeSeekbar() {
-        mSeekbarAudio.setOnSeekBarChangeListener(
-                new SeekBar.OnSeekBarChangeListener() {
-                    int userSelectedPosition = 0;
-
-                    @Override
-                    public void onStartTrackingTouch(SeekBar seekBar) {
-                        mUserIsSeeking = true;
-                    }
-
-                    @Override
-                    public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                        if (fromUser) {
-                            userSelectedPosition = progress;
-                        }
-                    }
-
-                    @Override
-                    public void onStopTrackingTouch(SeekBar seekBar) {
-                        mUserIsSeeking = false;
-                        mPlayerAdapter.seekTo(userSelectedPosition);
-                    }
-                });
-    }
-
     public class PlaybackListener extends PlaybackInfoListener {
 
         @Override
         public void onDurationChanged(int duration) {
-            mSeekbarAudio.setMax(duration);
             Log.d(TAG, String.format("setPlaybackDuration: setMax(%d)", duration));
         }
 
         @Override
         public void onPositionChanged(int position) {
             if (!mUserIsSeeking) {
-                mSeekbarAudio.setProgress(position);
                 Log.d(TAG, String.format("setPlaybackPosition: setProgress(%d)", position));
             }
         }
@@ -259,7 +166,6 @@ public class MainActivity extends AppCompatActivity
 
         @Override
         public void onLogUpdated(String message) {
-
         }
     }
 

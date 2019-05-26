@@ -52,11 +52,6 @@
             android:key="@string/key_policy"
             android:title="@string/subhead_policy" />
 
-        <Preference
-            />
-
-        <Preference
-            />
     </PreferenceCategory>
 
 </PreferenceScreen>
