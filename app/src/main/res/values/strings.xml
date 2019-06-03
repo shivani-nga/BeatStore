@@ -30,6 +30,9 @@
     <string name="empty_view_text">It\'s a bit lonely here…</string>
     <string name="no_internet">No internet connection.</string>
 
+
+    <string name="file_provider_authority">com.makehitmusic.hiphopbeats.fileprovider</string>
+
     <!-- Toolbar titles when navigation menu item is selected -->
     <string-array name="nav_item_titles">
         <item>Beats</item>
@@ -54,18 +57,20 @@
     <string name="fb_login_protocol_scheme">fb[2326506384058206]</string>
 
     <string name="preference_login">LoginPreferences</string>
+    <string name="email_option">Email</string>
+    <string name="drive_option">Google Drive</string>
 
     <!-- Settings Screen Headers -->
     <string name="head_profile">Profile</string>
     <string name="head_purchases">In App Purchases</string>
-    <string name="head_apps">Other Apps By MakeHitMusic.Com</string>
+    <string name="head_apps">Other Apps</string>
     <string name="head_others">Others</string>
 
     <!-- Settings Screen Subheaders -->
     <string name="subhead_logout">Logout</string>
     <string name="subhead_purchases">Restore Purchases</string>
     <string name="subhead_license">Beat Licensing FAQs</string>
-    <string name="subhead_apps">Free Hip Hop Studio Recording App</string>
+    <string name="subhead_apps">Songwriter\'s Pad - The Songwriting App (Free)</string>
     <string name="subhead_sell">How Can I Sell My Beats?</string>
     <string name="subhead_idea">Turn Your App Idea Into Reality!</string>
     <string name="subhead_review">Write A Review</string>
@@ -87,6 +92,6 @@
 
     <!-- Settings Screen Summary -->
     <string name="summary_purchases">Restore your previously purchased beats</string>
-    <string name="summary_apps">Take your music to the next level with this all in one studio designed for especially for rappers</string>
+    <string name="summary_apps">Eliminate writer\'s block and take your lyrics to the next level with a built in rhyme dictionary and idea generator. Used by Grammy Award winners and beginners alike.</string>
 
 </resources>

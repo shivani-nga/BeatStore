@@ -1,11 +1,20 @@
 package com.makehitmusic.hiphopbeats.fragment;
 
+import android.Manifest;
+import android.app.DownloadManager;
+import android.app.ProgressDialog;
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.pm.PackageManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.support.v4.app.Fragment;
+import android.support.v4.content.FileProvider;
 import android.support.v7.widget.SearchView;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -16,13 +25,17 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.CompoundButton;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.PopupMenu;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.Switch;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.makehitmusic.hiphopbeats.R;
 import com.makehitmusic.hiphopbeats.adapter.BeatsAdapter;
@@ -33,12 +46,20 @@ import com.makehitmusic.hiphopbeats.presenter.MediaPlayerHolder;
 import com.makehitmusic.hiphopbeats.presenter.PlaybackInfoListener;
 import com.makehitmusic.hiphopbeats.rest.ApiClient;
 import com.makehitmusic.hiphopbeats.rest.ApiInterface;
+import com.makehitmusic.hiphopbeats.view.MainActivity;
 
+import java.io.File;
 import java.util.ArrayList;
 
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
+
+import static android.content.Context.DOWNLOAD_SERVICE;
+import static android.os.Environment.DIRECTORY_MUSIC;
+import static android.os.Environment.getExternalStoragePublicDirectory;
+import static com.facebook.FacebookSdk.getApplicationContext;
+import static java.security.AccessController.getContext;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -53,6 +74,17 @@ public class LibraryFragment extends Fragment implements SearchView.OnQueryTextL
     /** Tag for log messages */
     private static final String LOG_TAG = LibraryFragment.class.getName();
 
+    private static final int MY_PERMISSIONS_REQUEST_READ = 1;
+    private static final int MY_PERMISSIONS_REQUEST_WRITE = 2;
+    private boolean READ_PERMISSION = false;
+    private boolean WRITE_PERMISSION = false;
+    public int count = 0;
+    public boolean isDownloaded = false;
+    public BeatsObject beatHolder;
+    public File fileHolder;
+
+    public ProgressDialog dialog;
+
     ListView beatsListView;
     private int tab_position;
 
@@ -65,6 +97,8 @@ public class LibraryFragment extends Fragment implements SearchView.OnQueryTextL
 
     public int categoryId;
     ArrayList<BeatsObject> beatsList;
+
+    private long downloadID;
 
     ProgressBar progressBar;
 
@@ -113,11 +147,42 @@ public class LibraryFragment extends Fragment implements SearchView.OnQueryTextL
         super.onCreate(savedInstanceState);
         mContext = getActivity();
         setHasOptionsMenu(true);
+        mContext.registerReceiver(onDownloadComplete, new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE));
         if (getArguments() != null) {
             mParam1 = getArguments().getString(ARG_PARAM1);
             mParam2 = getArguments().getString(ARG_PARAM2);
         }
     }
+
+    private BroadcastReceiver onDownloadComplete = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            //Fetching the download id received with the broadcast
+            long id = intent.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1);
+            //Checking if the received broadcast is for our enqueued download by matching download id
+            if (downloadID == id) {
+                //Toast.makeText(mContext, "Download Completed", Toast.LENGTH_SHORT).show();
+                isDownloaded = true;
+                if (isDownloaded) {
+                    dialog.dismiss();
+                    startEmailIntent();
+                } else if (!isDownloaded) {
+                    Toast.makeText(mContext, "File could not be attached, try again later", Toast.LENGTH_SHORT).show();
+                }
+            }
+        }
+    };
+
+//    @Override
+//    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+//        long viewId = view.getId();
+//
+//        if (viewId == R.id.options) {
+//            Toast.makeText(mContext, "Options clicked", Toast.LENGTH_SHORT).show();
+//        } else {
+//            Toast.makeText(mContext, "ListView clicked" + id, Toast.LENGTH_SHORT).show();
+//        }
+//    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -178,8 +243,7 @@ public class LibraryFragment extends Fragment implements SearchView.OnQueryTextL
                     emptyImage.setVisibility(View.GONE);
                     emptyText.setVisibility(View.GONE);
                 }
-
-                beatsListView.setAdapter(new BeatsAdapter(getActivity(), beatsList));
+                beatsListView.setAdapter(new BeatsAdapter(getActivity(), beatsList, 1));
             }
 
             @Override
@@ -202,14 +266,194 @@ public class LibraryFragment extends Fragment implements SearchView.OnQueryTextL
         beatsListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int position, long id) {
+                long viewId = view.getId();
+
+                // Find the beat at the given position in the list of beats
                 BeatsObject beatsObject = beatsList.get(position);
-                mPlayerAdapter.playFromList(beatsObject.getItemSamplePath());
-                //mMainActivity.changeMusicContent(beatsObject.getItemName(), beatsObject.getItemImageBig(),
-                //beatsObject.getProducerName(), beatsObject.getIsLiked(), beatsObject.getItemPrice());
+
+                if (viewId == R.id.options) {
+                    //Toast.makeText(mContext, "Options clicked", Toast.LENGTH_SHORT).show();
+                    openPopupMenu(beatsObject, view);
+                } else {
+                    //Toast.makeText(mContext, "ListView clicked" + id, Toast.LENGTH_SHORT).show();
+
+                    mPlayerAdapter.playFromList(beatsObject.getItemSamplePath());
+                    //mMainActivity.changeMusicContent(beatsObject.getItemName(), beatsObject.getItemImageBig(),
+                    //beatsObject.getProducerName(), beatsObject.getIsLiked(), beatsObject.getItemPrice());
+                }
             }
         });
         return rootView;
 
+    }
+
+    public void openPopupMenu(BeatsObject currentBeat, View v) {
+
+        final BeatsObject clickedBeat = currentBeat;
+        //creating a popup menu
+        PopupMenu popup = new PopupMenu(mContext, v);
+        //inflating menu from xml resource
+        MenuInflater inflater = popup.getMenuInflater();
+        inflater.inflate(R.menu.library_menu, popup.getMenu());
+        //displaying the popup
+        popup.show();
+        beatHolder = clickedBeat;
+        //adding click listener
+        popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+            @Override
+            public boolean onMenuItemClick(MenuItem item) {
+                switch (item.getItemId()) {
+                    case R.id.email_option:
+                        //handle email click
+                        checkReadPermission();
+                        break;
+                    case R.id.drive_option:
+                        //handle drive click
+                        checkReadPermission();
+                        break;
+                }
+                return false;
+            }
+        });
+
+    }
+
+    private void continueToOptions() {
+        final String samplePath = beatHolder.getItemSamplePath();
+        if (count >= 2) {
+            try {
+                File imageStorageDir = new File(getExternalStoragePublicDirectory(DIRECTORY_MUSIC), "MHMBeats");
+
+
+                if (!imageStorageDir.exists()) {
+
+                    imageStorageDir.mkdirs();
+                }
+
+
+                String imgExtension = ".mp3";
+
+                String file = beatHolder.getItemName() + " - " + beatHolder.getProducerName() + imgExtension;
+
+                File filePath = new File(getExternalStoragePublicDirectory(DIRECTORY_MUSIC)
+                        + "/" + file);
+                Log.d("FileExists", String.valueOf(filePath.exists()));
+
+                if (!filePath.exists()) {
+                    DownloadManager dm = (DownloadManager) mContext.getSystemService(DOWNLOAD_SERVICE);
+                    Uri downloadUri = Uri.parse(samplePath);
+                    DownloadManager.Request request = new DownloadManager.Request(downloadUri);
+
+                    request.setAllowedNetworkTypes(DownloadManager.Request.NETWORK_WIFI | DownloadManager.Request.NETWORK_MOBILE)
+                            .setDestinationInExternalPublicDir(DIRECTORY_MUSIC + File.separator, file)
+                            .setTitle(file).setDescription("BeatStore")
+                            .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
+
+                    downloadID = dm.enqueue(request);
+
+                    dialog = ProgressDialog.show(mContext,"BeatStore", "Please wait....",true);
+
+                    fileHolder = filePath;
+                    //Toast.makeText(mContext, "Downloading...", Toast.LENGTH_LONG).show();
+
+                } else {
+                    startEmailIntent();
+                }
+
+
+            } catch (IllegalStateException ex) {
+                Toast.makeText(mContext.getApplicationContext(), "Storage Error", Toast.LENGTH_SHORT).show();
+                ex.printStackTrace();
+            } catch (Exception ex) {
+                // just in case, it should never be called anyway
+                Toast.makeText(mContext.getApplicationContext(), "Unable to attach beat", Toast.LENGTH_SHORT).show();
+                ex.printStackTrace();
+            }
+        } else {
+            Toast.makeText(mContext, "Please grant access to use this functionality", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void checkReadPermission() {
+        if (getActivity().checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE)
+                != PackageManager.PERMISSION_GRANTED) {
+            // Permission is not granted
+            // No explanation needed; request the permission
+            requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
+                    MY_PERMISSIONS_REQUEST_READ);
+        } else {
+            READ_PERMISSION = true;
+            count += 1;
+            checkWritePermission();
+        }
+    }
+
+    private void checkWritePermission() {
+        if (getActivity().checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                != PackageManager.PERMISSION_GRANTED) {
+            // Permission is not granted
+            // No explanation needed; request the permission
+            requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                    MY_PERMISSIONS_REQUEST_WRITE);
+        }
+        else {
+            WRITE_PERMISSION = true;
+            count += 1;
+            continueToOptions();
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode,
+                                           String[] permissions, int[] grantResults) {
+        switch (requestCode) {
+            case MY_PERMISSIONS_REQUEST_READ: {
+                // If request is cancelled, the result arrays are empty.
+                if (grantResults.length > 0
+                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    // permission was granted, yay!
+                    READ_PERMISSION = true;
+                    count += 1;
+                } else {
+                    // permission denied, boo!
+                    READ_PERMISSION = false;
+                }
+                checkWritePermission();
+                return;
+            }
+            case MY_PERMISSIONS_REQUEST_WRITE: {
+                // If request is cancelled, the result arrays are empty.
+                if (grantResults.length > 0
+                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    // permission was granted, yay!
+                    WRITE_PERMISSION = true;
+                    count += 1;
+                } else {
+                    // permission denied, boo!
+                    WRITE_PERMISSION = false;
+                }
+                continueToOptions();
+                return;
+            }
+
+            // other 'case' lines to check for other
+            // permissions this app might request.
+        }
+    }
+
+    private void startEmailIntent() {
+        Intent emailIntent = new Intent(Intent.ACTION_SEND);
+        emailIntent.setData(Uri.parse("mailto:")); // only email apps should handle this
+        emailIntent.setType("message/rfc822");
+        //emailIntent.putExtra(android.content.Intent.EXTRA_EMAIL, new String[]{"xxx@xxx.xxx"});
+        emailIntent.putExtra(Intent.EXTRA_TEXT, "Sent from my Android Device.");
+        emailIntent.putExtra(android.content.Intent.EXTRA_SUBJECT,
+                beatHolder.getItemName() + " from Beat Store");
+        Uri beatURI = FileProvider.getUriForFile(getActivity(),
+                mContext.getString(R.string.file_provider_authority),
+                fileHolder);
+        emailIntent.putExtra(Intent.EXTRA_STREAM, beatURI);
+        mContext.startActivity(Intent.createChooser(emailIntent, "Send Beat"));
     }
 
     private void initializePlaybackController() {
@@ -268,6 +512,12 @@ public class LibraryFragment extends Fragment implements SearchView.OnQueryTextL
     public void onDetach() {
         super.onDetach();
         mListener = null;
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        mContext.unregisterReceiver(onDownloadComplete);
     }
 
     /**
@@ -380,13 +630,13 @@ public class LibraryFragment extends Fragment implements SearchView.OnQueryTextL
             }
         }
 
-        beatsListView.setAdapter(new BeatsAdapter(getActivity(), filteredValues));
+        beatsListView.setAdapter(new BeatsAdapter(getActivity(), filteredValues, 1));
 
         return false;
     }
 
     public void resetSearch() {
-        beatsListView.setAdapter(new BeatsAdapter(getActivity(), beatsList));
+        beatsListView.setAdapter(new BeatsAdapter(getActivity(), beatsList, 1));
     }
 
     public boolean performSearch(String searchedText) {
@@ -410,7 +660,7 @@ public class LibraryFragment extends Fragment implements SearchView.OnQueryTextL
             }
         }
 
-        beatsListView.setAdapter(new BeatsAdapter(getActivity(), filteredValues));
+        beatsListView.setAdapter(new BeatsAdapter(getActivity(), filteredValues, 1));
 
         return false;
     }

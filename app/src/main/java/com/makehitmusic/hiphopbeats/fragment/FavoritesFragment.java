@@ -183,7 +183,7 @@ public class FavoritesFragment extends Fragment implements SearchView.OnQueryTex
                     emptyText.setVisibility(View.GONE);
                 }
 
-                beatsListView.setAdapter(new BeatsAdapter(getActivity(), beatsList));
+                beatsListView.setAdapter(new BeatsAdapter(getActivity(), beatsList, 0));
             }
 
             @Override
@@ -383,13 +383,13 @@ public class FavoritesFragment extends Fragment implements SearchView.OnQueryTex
             }
         }
 
-        beatsListView.setAdapter(new BeatsAdapter(getActivity(), filteredValues));
+        beatsListView.setAdapter(new BeatsAdapter(getActivity(), filteredValues, 0));
 
         return false;
     }
 
     public void resetSearch() {
-        beatsListView.setAdapter(new BeatsAdapter(getActivity(), beatsList));
+        beatsListView.setAdapter(new BeatsAdapter(getActivity(), beatsList, 0));
     }
 
     public boolean performSearch(String searchedText) {
@@ -413,7 +413,7 @@ public class FavoritesFragment extends Fragment implements SearchView.OnQueryTex
             }
         }
 
-        beatsListView.setAdapter(new BeatsAdapter(getActivity(), filteredValues));
+        beatsListView.setAdapter(new BeatsAdapter(getActivity(), filteredValues, 0));
 
         return false;
     }

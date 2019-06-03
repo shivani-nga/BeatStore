@@ -125,7 +125,7 @@ public class MoreFragment extends Fragment {
 
         String urlLicensing = "https://makehitmusic.net/apps/mogul/faqs/";
         String urlApps = "https://itunes.apple.com/us/app/make-hit-music-hip-hop-studio/id1438351352?ls=1&mt=8";
-        String urlSell = "https://makehitmusic.com";
+        String urlSell = "https://pages.convertkit.com/ea2996f0bb/ca7fa96488";
         String urlIdea = "https://my.appideatoreality.com";
         String urlTerms = "https://makehitmusic.net/apps/mogul/terms-of-use/";
         String urlPolicy = "https://makehitmusic.net/apps/mogul/privacy-policy/";
@@ -167,6 +167,8 @@ public class MoreFragment extends Fragment {
                         }
                     } else if (loginTypeInt == 2 && userCode != 0 && userId != 0) {
                         resetEverything();
+                    } else {
+                        revokeAccess();
                     }
 
                     return true;

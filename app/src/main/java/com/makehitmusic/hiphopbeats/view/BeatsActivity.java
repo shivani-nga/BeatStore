@@ -178,7 +178,7 @@ public class BeatsActivity extends AppCompatActivity implements SearchView.OnQue
         }
 
         // Create a new adapter that takes an empty list of earthquakes as input
-        mAdapter = new BeatsAdapter(this, beatsList);
+        mAdapter = new BeatsAdapter(this, beatsList, 0);
 
         ApiInterface apiService = ApiClient.getClient().create(ApiInterface.class);
 
@@ -205,7 +205,7 @@ public class BeatsActivity extends AppCompatActivity implements SearchView.OnQue
                         emptyText.setVisibility(View.GONE);
                     }
 
-                    beatsListView.setAdapter(new BeatsAdapter(BeatsActivity.this, beatsList));
+                    beatsListView.setAdapter(new BeatsAdapter(BeatsActivity.this, beatsList, 0));
                 }
 
                 @Override
@@ -245,7 +245,7 @@ public class BeatsActivity extends AppCompatActivity implements SearchView.OnQue
                         emptyText.setVisibility(View.GONE);
                     }
 
-                    beatsListView.setAdapter(new BeatsAdapter(BeatsActivity.this, beatsList));
+                    beatsListView.setAdapter(new BeatsAdapter(BeatsActivity.this, beatsList, 0));
                 }
 
                 @Override
@@ -289,7 +289,7 @@ public class BeatsActivity extends AppCompatActivity implements SearchView.OnQue
                         emptyText.setVisibility(View.GONE);
                     }
 
-                    beatsListView.setAdapter(new BeatsAdapter(BeatsActivity.this, beatsList));
+                    beatsListView.setAdapter(new BeatsAdapter(BeatsActivity.this, beatsList, 0));
                 }
 
                 @Override
@@ -333,7 +333,7 @@ public class BeatsActivity extends AppCompatActivity implements SearchView.OnQue
                         emptyText.setVisibility(View.GONE);
                     }
 
-                    beatsListView.setAdapter(new BeatsAdapter(BeatsActivity.this, beatsList));
+                    beatsListView.setAdapter(new BeatsAdapter(BeatsActivity.this, beatsList, 0));
                 }
 
                 @Override
@@ -529,13 +529,13 @@ public class BeatsActivity extends AppCompatActivity implements SearchView.OnQue
             }
         }
 
-        beatsListView.setAdapter(new BeatsAdapter(this, filteredValues));
+        beatsListView.setAdapter(new BeatsAdapter(this, filteredValues, 0));
 
         return false;
     }
 
     public void resetSearch() {
-        beatsListView.setAdapter(new BeatsAdapter(this, beatsList));
+        beatsListView.setAdapter(new BeatsAdapter(this, beatsList, 0));
     }
 
     public boolean performSearch(String searchedText) {
@@ -559,7 +559,7 @@ public class BeatsActivity extends AppCompatActivity implements SearchView.OnQue
             }
         }
 
-        beatsListView.setAdapter(new BeatsAdapter(this, filteredValues));
+        beatsListView.setAdapter(new BeatsAdapter(this, filteredValues, 0));
 
         return false;
     }
