@@ -6,7 +6,10 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v7.widget.SearchView;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -18,6 +21,7 @@ import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.CompoundButton;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.ProgressBar;
@@ -36,13 +40,17 @@ import com.makehitmusic.hiphopbeats.presenter.MediaPlayerHolder;
 import com.makehitmusic.hiphopbeats.presenter.PlaybackInfoListener;
 import com.makehitmusic.hiphopbeats.rest.ApiClient;
 import com.makehitmusic.hiphopbeats.rest.ApiInterface;
+import com.makehitmusic.hiphopbeats.utils.FragmentUtil;
 import com.makehitmusic.hiphopbeats.view.BeatsActivity;
+import com.makehitmusic.hiphopbeats.view.MainActivity;
 
 import java.util.ArrayList;
 
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
+
+import static com.makehitmusic.hiphopbeats.view.MainActivity.CURRENT_TAG;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -89,7 +97,19 @@ public class ProducersFragment extends Fragment implements SearchView.OnQueryTex
 
     SearchView searchView;
 
+    private Handler mHandler;
+
+    public MainActivity mActivity;
+
+    private int positionData;
+    private ProducersObject producersObject;
+
     public ProducersFragment() {
+        // Required empty public constructor
+    }
+
+    public ProducersFragment(MainActivity activity) {
+        mActivity = activity;
         // Required empty public constructor
     }
 
@@ -109,6 +129,7 @@ public class ProducersFragment extends Fragment implements SearchView.OnQueryTex
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         mContext = getActivity();
+        mHandler = new Handler();
         setHasOptionsMenu(true);
         if (getArguments() != null) {
             mParam1 = getArguments().getString(ARG_PARAM1);
@@ -122,6 +143,8 @@ public class ProducersFragment extends Fragment implements SearchView.OnQueryTex
 
         // Inflate the layout for this fragment
         View rootView =  inflater.inflate(R.layout.fragment_producers, container, false);
+
+        final FragmentManager fragmentManager = getFragmentManager();
 
         // Find the ListView which will be populated with the producers data
         producersListView = (ListView) rootView.findViewById(R.id.list_producers_record);
@@ -197,15 +220,72 @@ public class ProducersFragment extends Fragment implements SearchView.OnQueryTex
         producersListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int position, long id) {
-                ProducersObject producersObject = producersList.get(position);
-                Intent intent = new Intent(getActivity(), BeatsActivity.class);
-                intent.putExtra("position", position);
-                intent.putExtra("tab_position", 2);
-                intent.putExtra("producer_id", producersObject.getProducerId());
-                intent.putExtra("producer_name", producersObject.getProducerName());
-                intent.putExtra("producer_description", producersObject.getProducerDescription());
-                intent.putExtra("producer_image", producersObject.getProducerImage());
-                getActivity().startActivity(intent);
+                producersObject = producersList.get(position);
+                positionData = position;
+
+                Bundle arguments = new Bundle();
+                arguments.putInt("position", positionData);
+                arguments.putInt("tab_position", 2);
+                arguments.putString("producer_id", producersObject.getProducerId());
+                arguments.putString("producer_name", producersObject.getProducerName());
+                arguments.putString("producer_description", producersObject.getProducerDescription());
+                arguments.putString("producer_image", producersObject.getProducerImage());
+
+                mActivity.loadBeatsFragment(arguments);
+
+//                Intent intent = new Intent(getActivity(), BeatsActivity.class);
+//                intent.putExtra("position", position);
+//                intent.putExtra("tab_position", 2);
+//                intent.putExtra("producer_id", producersObject.getProducerId());
+//                intent.putExtra("producer_name", producersObject.getProducerName());
+//                intent.putExtra("producer_description", producersObject.getProducerDescription());
+//                intent.putExtra("producer_image", producersObject.getProducerImage());
+//                getActivity().startActivity(intent);
+
+//                // Sometimes, when fragment has huge data, screen seems hanging
+//                // when switching between navigation menus
+//                // So using runnable, the fragment is loaded with cross fade effect
+//                // This effect can be seen in GMail app
+//                Runnable mPendingRunnable = new Runnable() {
+//                    @Override
+//                    public void run() {
+//                        Fragment fragmentSubProducers = FragmentUtil.getFragmentByTagName(fragmentManager, "list_beat_producers");
+//
+//                        // Because fragment two has been popup from the back stack, so it must be null.
+//                        if(fragmentSubProducers == null) {
+//                            fragmentSubProducers = new BeatsFragment();
+//                        }
+//
+//                        Bundle arguments = new Bundle();
+//                        arguments.putInt("position", positionData);
+//                        arguments.putInt("tab_position", 2);
+//                        arguments.putString("producer_id", producersObject.getProducerId());
+//                        arguments.putString("producer_name", producersObject.getProducerName());
+//                        arguments.putString("producer_description", producersObject.getProducerDescription());
+//                        arguments.putString("producer_image", producersObject.getProducerImage());
+//                        fragmentSubProducers.setArguments(arguments);
+//
+//                        FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+//                        fragmentTransaction.setCustomAnimations(android.R.anim.fade_in,
+//                                android.R.anim.fade_out);
+//                        // Replace ProducersFragment one with BeatsFragment, the second fragment tag name is "list_beat_producers".
+//                        // This action will remove ProducersFragment and add BeatsFragment.
+//                        fragmentTransaction.replace(R.id.frame, fragmentSubProducers, "list_beat_producers");
+//
+//                        // Add fragment one in back stack.So it will not be destroyed. Press back menu can pop it up from the stack.
+//                        fragmentTransaction.addToBackStack(null);
+//
+//                        fragmentTransaction.commit();
+//
+//                        FragmentUtil.printActivityFragmentList(fragmentManager);
+//                    }
+//                };
+//
+//                // If mPendingRunnable is not null, then add to the message queue
+//                if (mPendingRunnable != null) {
+//                    mHandler.post(mPendingRunnable);
+//                }
+
             }
         });
         return rootView;

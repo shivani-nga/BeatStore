@@ -42,6 +42,7 @@ import com.makehitmusic.hiphopbeats.presenter.JsonResponse;
 import com.makehitmusic.hiphopbeats.rest.ApiClient;
 import com.makehitmusic.hiphopbeats.rest.ApiInterface;
 import com.makehitmusic.hiphopbeats.view.BeatsActivity;
+import com.makehitmusic.hiphopbeats.view.MainActivity;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -93,7 +94,14 @@ public class CategoryFragment extends Fragment implements SearchView.OnQueryText
 
     SearchView searchView;
 
+    public MainActivity mActivity;
+
     public CategoryFragment() {
+        // Required empty public constructor
+    }
+
+    public CategoryFragment(MainActivity activity) {
+        mActivity = activity;
         // Required empty public constructor
     }
 
@@ -218,13 +226,21 @@ public class CategoryFragment extends Fragment implements SearchView.OnQueryText
                     @Override
                     public void onClick(View view, int position) {
                         Category clickedCategory = categoryList.get(position);
-                        Intent intent = new Intent(getActivity(), BeatsActivity.class);
-                        intent.putExtra("position", position);
-                        intent.putExtra("tab_position", 1);
-                        intent.putExtra("category_name", clickedCategory.getCategoryName());
-                        intent.putExtra("category_id", String.valueOf(clickedCategory.getCategoryId()));
-                        Log.d("CategoryID[CatAdpt]", String.valueOf(clickedCategory.getCategoryId()));
-                        getActivity().startActivity(intent);
+
+                        Bundle arguments = new Bundle();
+                        arguments.putInt("position", position);
+                        arguments.putInt("tab_position", 1);
+                        arguments.putString("category_id", String.valueOf(clickedCategory.getCategoryId()));
+                        arguments.putString("category_name", clickedCategory.getCategoryName());
+
+                        mActivity.loadBeatsFragment(arguments);
+//                        Intent intent = new Intent(getActivity(), BeatsActivity.class);
+//                        intent.putExtra("position", position);
+//                        intent.putExtra("tab_position", 1);
+//                        intent.putExtra("category_name", clickedCategory.getCategoryName());
+//                        intent.putExtra("category_id", String.valueOf(clickedCategory.getCategoryId()));
+//                        Log.d("CategoryID[CatAdpt]", String.valueOf(clickedCategory.getCategoryId()));
+//                        getActivity().startActivity(intent);
                     }
                 };
 

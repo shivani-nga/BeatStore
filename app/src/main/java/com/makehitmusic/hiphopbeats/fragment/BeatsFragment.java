@@ -30,6 +30,9 @@ import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.borjabravo.readmoretextview.ReadMoreTextView;
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.request.RequestOptions;
 import com.makehitmusic.hiphopbeats.R;
 import com.makehitmusic.hiphopbeats.adapter.BeatsAdapter;
 import com.makehitmusic.hiphopbeats.adapter.CategoryAdapter;
@@ -41,6 +44,8 @@ import com.makehitmusic.hiphopbeats.presenter.MediaPlayerHolder;
 import com.makehitmusic.hiphopbeats.presenter.PlaybackInfoListener;
 import com.makehitmusic.hiphopbeats.rest.ApiClient;
 import com.makehitmusic.hiphopbeats.rest.ApiInterface;
+import com.makehitmusic.hiphopbeats.utils.MediaPlayerService;
+import com.makehitmusic.hiphopbeats.view.BeatsActivity;
 import com.makehitmusic.hiphopbeats.view.MainActivity;
 
 import java.util.ArrayList;
@@ -50,21 +55,29 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
+import static com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions.withCrossFade;
+
 /**
  * A simple {@link Fragment} subclass.
  * Activities that contain this fragment must implement the
- * {@link FavoritesFragment.OnFragmentInteractionListener} interface
+ * {@link BeatsFragment.OnFragmentInteractionListener} interface
  * to handle interaction events.
- * Use the {@link FavoritesFragment#newInstance} factory method to
+ * Use the {@link BeatsFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class FavoritesFragment extends Fragment implements SearchView.OnQueryTextListener, MenuItem.OnActionExpandListener {
+public class BeatsFragment extends Fragment implements SearchView.OnQueryTextListener, MenuItem.OnActionExpandListener {
 
     /** Tag for log messages */
-    private static final String LOG_TAG = FavoritesFragment.class.getName();
+    private static final String LOG_TAG = BeatsFragment.class.getName();
 
+    public int categoryId;
+    public int producerId;
     ListView beatsListView;
     private int tab_position;
+    private String categoryName;
+    private String producerName;
+    private String producerDescription;
+    private String producerImage;
 
     private final int CATEGORY_TAB = 1;
     private final int PRODUCERS_TAB = 2;
@@ -72,15 +85,23 @@ public class FavoritesFragment extends Fragment implements SearchView.OnQueryTex
     private final int LIBRARY_TAB = 4;
 
     private PlayerAdapter mPlayerAdapter;
-
-    public int categoryId;
     ArrayList<BeatsObject> beatsList;
+
+    /** Adapter for the list of beats */
+    private BeatsAdapter mAdapter;
+
+    SearchView searchView;
+
+    Switch switchView;
 
     ProgressBar progressBar;
 
     RelativeLayout emptyView;
     ImageView emptyImage;
     TextView emptyText;
+
+    private boolean searchByBeats = true;
+    private String searchedText = "";
 
     // TODO: Rename parameter arguments, choose names that match
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
@@ -95,14 +116,7 @@ public class FavoritesFragment extends Fragment implements SearchView.OnQueryTex
 
     private Context mContext;
 
-    SearchView searchView;
-
-    Switch switchView;
-
-    private boolean searchByBeats = true;
-    private String searchedText = "";
-
-    public FavoritesFragment() {
+    public BeatsFragment() {
         // Required empty public constructor
     }
 
@@ -110,11 +124,11 @@ public class FavoritesFragment extends Fragment implements SearchView.OnQueryTex
      * Use this factory method to create a new instance of
      * this fragment using the provided parameters.
      *
-     * @return A new instance of fragment FavoritesFragment.
+     * @return A new instance of fragment BeatsFragment.
      */
     // TODO: Rename and change types and number of parameters
-    public static FavoritesFragment newInstance() {
-        FavoritesFragment fragment = new FavoritesFragment();
+    public static BeatsFragment newInstance() {
+        BeatsFragment fragment = new BeatsFragment();
         return fragment;
     }
 
@@ -127,6 +141,21 @@ public class FavoritesFragment extends Fragment implements SearchView.OnQueryTex
             mParam1 = getArguments().getString(ARG_PARAM1);
             mParam2 = getArguments().getString(ARG_PARAM2);
         }
+
+        Bundle arguments = getArguments();
+        //categoryId = Integer.parseInt(arguments.getString("category_id"));
+        tab_position = arguments.getInt("tab_position");
+        if (tab_position == 1) {
+            categoryId = Integer.parseInt(arguments.getString("category_id"));
+            categoryName = arguments.getString("category_name");
+        }else if (tab_position == 2) {
+            producerId = Integer.parseInt(arguments.getString("producer_id"));
+            producerName = arguments.getString("producer_name");
+            producerDescription = arguments.getString("producer_description");
+            producerImage = arguments.getString("producer_image");
+        }
+
+        //getActivity().setTitle(producerName);
     }
 
     @Override
@@ -167,44 +196,226 @@ public class FavoritesFragment extends Fragment implements SearchView.OnQueryTex
 //        View emptyView = rootView.findViewById(R.id.empty_view);
 //        producersListView.setEmptyView(emptyView);
 
+        if (tab_position == PRODUCERS_TAB) {
+
+            // Initialize Header
+            LayoutInflater inflaterH = getLayoutInflater();
+            ViewGroup header = (ViewGroup) inflaterH.inflate(R.layout.listview_header, beatsListView, false);
+
+            ImageView producerCover = (ImageView) header.findViewById(R.id.producer_cover);
+            TextView producerTitle = (TextView) header.findViewById(R.id.producer_title);
+            ReadMoreTextView producerInfo = (ReadMoreTextView) header.findViewById(R.id.producer_info);
+
+            if (!(producerImage.equals(""))) {
+                Glide.with(this).load(producerImage)
+                        //.placeholder(R.drawable.twotone_library_music_24)
+                        .apply(new RequestOptions().placeholder(R.drawable.highlight_color).error(R.drawable.highlight_color))
+                        .transition(withCrossFade()).into(producerCover);
+            }
+            else {
+                producerCover.setImageDrawable(this.getResources().getDrawable(R.drawable.rounded_border));
+            }
+
+            producerTitle.setText(producerName);
+            producerInfo.setText(producerDescription);
+
+            // Add a header to the ListView
+            beatsListView.addHeaderView(header);
+
+        }
+
+        // Create a new adapter that takes an empty list of beats as input
+        mAdapter = new BeatsAdapter(getActivity(), beatsList, 0);
+
         ApiInterface apiService = ApiClient.getClient().create(ApiInterface.class);
 
-        Call<CategoryResponse> call = apiService.getBeatsDetails(114909, "false", "true");
-        call.enqueue(new Callback<CategoryResponse>() {
-            @Override
-            public void onResponse(Call<CategoryResponse> call, Response<CategoryResponse> response) {
-                progressBar.setVisibility(View.GONE);
-                int statusCode = response.code();
-                beatsList = response.body().getBeatsResults();
+        // Category Tab is selected now
+        if (tab_position == CATEGORY_TAB && categoryId != 0) {
+            Log.d("CategoryID[TabBeatFrag]", String.valueOf(categoryId));
+            Call<CategoryResponse> call = apiService.getBeatsDetails(categoryId, 114909, "false", "true");
+            call.enqueue(new Callback<CategoryResponse>() {
+                @Override
+                public void onResponse(Call<CategoryResponse> call, Response<CategoryResponse> response) {
+                    progressBar.setVisibility(View.GONE);
+                    int statusCode = response.code();
+                    beatsList = response.body().getBeatsResults();
 
-                if (beatsList.isEmpty()) {
+                    if (beatsList == null) {
+                        emptyView.setVisibility(View.VISIBLE);
+                        emptyImage.setVisibility(View.VISIBLE);
+                        emptyText.setVisibility(View.VISIBLE);
+                        emptyImage.setImageResource(R.drawable.empty_view);
+                        emptyText.setText(R.string.empty_view_text);
+                        return;
+                    } else if (beatsList.isEmpty()) {
+                        emptyView.setVisibility(View.VISIBLE);
+                        emptyImage.setVisibility(View.VISIBLE);
+                        emptyText.setVisibility(View.VISIBLE);
+                        emptyImage.setImageResource(R.drawable.empty_view);
+                        emptyText.setText(R.string.empty_view_text);
+                    } else {
+                        emptyView.setVisibility(View.GONE);
+                        emptyImage.setVisibility(View.GONE);
+                        emptyText.setVisibility(View.GONE);
+                    }
+
+                    beatsListView.setAdapter(new BeatsAdapter(getActivity(), beatsList, 0));
+                }
+
+                @Override
+                public void onFailure(Call<CategoryResponse> call, Throwable t) {
+                    // Log error here since request failed
+                    Log.e(LOG_TAG, t.toString());
+
+                    progressBar.setVisibility(View.GONE);
                     emptyView.setVisibility(View.VISIBLE);
                     emptyImage.setVisibility(View.VISIBLE);
                     emptyText.setVisibility(View.VISIBLE);
-                    emptyImage.setImageResource(R.drawable.empty_view);
-                    emptyText.setText(R.string.empty_view_text);
-                } else {
-                    emptyView.setVisibility(View.GONE);
-                    emptyImage.setVisibility(View.GONE);
-                    emptyText.setVisibility(View.GONE);
+                    emptyImage.setImageResource(R.drawable.no_internet);
+                    emptyText.setText(R.string.no_internet);
+                }
+            });
+        }
+        // Producer's Beat Tab is selected now
+        else if (tab_position == PRODUCERS_TAB && producerId != 0) {
+            Log.d("ProducerID[BeatAct]", String.valueOf(producerId));
+            Call<CategoryResponse> call = apiService.getProducersDetails(producerId, 114909, "false", "true");
+            call.enqueue(new Callback<CategoryResponse>() {
+                @Override
+                public void onResponse(Call<CategoryResponse> call, Response<CategoryResponse> response) {
+                    progressBar.setVisibility(View.GONE);
+                    int statusCode = response.code();
+                    beatsList = response.body().getBeatsResults();
+
+                    if (beatsList == null) {
+                        emptyView.setVisibility(View.VISIBLE);
+                        emptyImage.setVisibility(View.VISIBLE);
+                        emptyText.setVisibility(View.VISIBLE);
+                        emptyImage.setImageResource(R.drawable.empty_view);
+                        emptyText.setText(R.string.empty_view_text);
+                        return;
+                    } else if (beatsList.isEmpty()) {
+                        emptyView.setVisibility(View.VISIBLE);
+                        emptyImage.setVisibility(View.VISIBLE);
+                        emptyText.setVisibility(View.VISIBLE);
+                        emptyImage.setImageResource(R.drawable.empty_view);
+                        emptyText.setText(R.string.empty_view_text);
+                    } else {
+                        emptyView.setVisibility(View.GONE);
+                        emptyImage.setVisibility(View.GONE);
+                        emptyText.setVisibility(View.GONE);
+                    }
+
+                    beatsListView.setAdapter(new BeatsAdapter(getActivity(), beatsList, 0));
                 }
 
-                beatsListView.setAdapter(new BeatsAdapter(getActivity(), beatsList, 0));
-            }
+                @Override
+                public void onFailure(Call<CategoryResponse> call, Throwable t) {
+                    // Log error here since request failed
+                    Log.e(LOG_TAG, t.toString());
 
-            @Override
-            public void onFailure(Call<CategoryResponse> call, Throwable t) {
-                // Log error here since request failed
-                Log.e(LOG_TAG, t.toString());
+                    if (beatsList.isEmpty()) {
+                        emptyView.setVisibility(View.VISIBLE);
+                        emptyImage.setVisibility(View.VISIBLE);
+                        emptyText.setVisibility(View.VISIBLE);
+                        emptyImage.setImageResource(R.drawable.empty_view);
+                        emptyText.setText(R.string.empty_view_text);
+                    } else {
+                        emptyView.setVisibility(View.GONE);
+                        emptyImage.setVisibility(View.GONE);
+                        emptyText.setVisibility(View.GONE);
+                    }
+                }
+            });
+        }
+        // Library Tab is selected now
+        else if (tab_position == LIBRARY_TAB) {
+            Call<CategoryResponse> call = apiService.getBeatsDetails("true", "true");
+            call.enqueue(new Callback<CategoryResponse>() {
+                @Override
+                public void onResponse(Call<CategoryResponse> call, Response<CategoryResponse> response) {
+                    progressBar.setVisibility(View.GONE);
+                    int statusCode = response.code();
+                    beatsList = response.body().getBeatsResults();
 
-                progressBar.setVisibility(View.GONE);
-                emptyView.setVisibility(View.VISIBLE);
-                emptyImage.setVisibility(View.VISIBLE);
-                emptyText.setVisibility(View.VISIBLE);
-                emptyImage.setImageResource(R.drawable.no_internet);
-                emptyText.setText(R.string.no_internet);
-            }
-        });
+                    if (beatsList.isEmpty()) {
+                        emptyView.setVisibility(View.VISIBLE);
+                        emptyImage.setVisibility(View.VISIBLE);
+                        emptyText.setVisibility(View.VISIBLE);
+                        emptyImage.setImageResource(R.drawable.empty_view);
+                        emptyText.setText(R.string.empty_view_text);
+                    } else {
+                        emptyView.setVisibility(View.GONE);
+                        emptyImage.setVisibility(View.GONE);
+                        emptyText.setVisibility(View.GONE);
+                    }
+
+                    beatsListView.setAdapter(new BeatsAdapter(getActivity(), beatsList, 0));
+                }
+
+                @Override
+                public void onFailure(Call<CategoryResponse> call, Throwable t) {
+                    // Log error here since request failed
+                    Log.e(LOG_TAG, t.toString());
+
+                    if (beatsList.isEmpty()) {
+                        emptyView.setVisibility(View.VISIBLE);
+                        emptyImage.setVisibility(View.VISIBLE);
+                        emptyText.setVisibility(View.VISIBLE);
+                        emptyImage.setImageResource(R.drawable.empty_view);
+                        emptyText.setText(R.string.empty_view_text);
+                    } else {
+                        emptyView.setVisibility(View.GONE);
+                        emptyImage.setVisibility(View.GONE);
+                        emptyText.setVisibility(View.GONE);
+                    }
+                }
+            });
+        }
+        // Favorites Tab is selected now
+        else if (tab_position == FAVORITES_TAB) {
+            Call<CategoryResponse> call = apiService.getBeatsDetails(114909, "false", "true");
+            call.enqueue(new Callback<CategoryResponse>() {
+                @Override
+                public void onResponse(Call<CategoryResponse> call, Response<CategoryResponse> response) {
+                    progressBar.setVisibility(View.GONE);
+                    int statusCode = response.code();
+                    beatsList = response.body().getBeatsResults();
+
+                    if (beatsList.isEmpty()) {
+                        emptyView.setVisibility(View.VISIBLE);
+                        emptyImage.setVisibility(View.VISIBLE);
+                        emptyText.setVisibility(View.VISIBLE);
+                        emptyImage.setImageResource(R.drawable.empty_view);
+                        emptyText.setText(R.string.empty_view_text);
+                    } else {
+                        emptyView.setVisibility(View.GONE);
+                        emptyImage.setVisibility(View.GONE);
+                        emptyText.setVisibility(View.GONE);
+                    }
+
+                    beatsListView.setAdapter(new BeatsAdapter(getActivity(), beatsList, 0));
+                }
+
+                @Override
+                public void onFailure(Call<CategoryResponse> call, Throwable t) {
+                    // Log error here since request failed
+                    Log.e(LOG_TAG, t.toString());
+
+                    if (beatsList.isEmpty()) {
+                        emptyView.setVisibility(View.VISIBLE);
+                        emptyImage.setVisibility(View.VISIBLE);
+                        emptyText.setVisibility(View.VISIBLE);
+                        emptyImage.setImageResource(R.drawable.empty_view);
+                        emptyText.setText(R.string.empty_view_text);
+                    } else {
+                        emptyView.setVisibility(View.GONE);
+                        emptyImage.setVisibility(View.GONE);
+                        emptyText.setVisibility(View.GONE);
+                    }
+                }
+            });
+        }
 
         initializePlaybackController();
 
@@ -224,7 +435,7 @@ public class FavoritesFragment extends Fragment implements SearchView.OnQueryTex
     private void initializePlaybackController() {
         MediaPlayerHolder mMediaPlayerHolder = new MediaPlayerHolder(getActivity());
         Log.d(LOG_TAG, "initializePlaybackController: created MediaPlayerHolder");
-        mMediaPlayerHolder.setPlaybackInfoListener(new FavoritesFragment.PlaybackListener());
+        mMediaPlayerHolder.setPlaybackInfoListener(new BeatsFragment.PlaybackListener());
         mPlayerAdapter = mMediaPlayerHolder;
         Log.d(LOG_TAG, "initializePlaybackController: MediaPlayerHolder progress callback set");
     }
@@ -310,7 +521,11 @@ public class FavoritesFragment extends Fragment implements SearchView.OnQueryTex
             @Override
             public void onClick(View v) {
                 Log.d("Search", "Expanded");
-                switchItem.setVisible(true);
+                if (tab_position == CATEGORY_TAB) {
+                    switchItem.setVisible(true);
+                } else if (tab_position == PRODUCERS_TAB) {
+                    switchItem.setVisible(false);
+                }
                 switchItem.setChecked(false);
                 switchView.setChecked(false);
                 searchByBeats = true;

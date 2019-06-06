@@ -6,6 +6,7 @@ import android.os.Handler;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.util.Log;
 import android.view.View;
@@ -24,6 +25,7 @@ import android.widget.TextView;
 
 import com.makehitmusic.hiphopbeats.R;
 import com.makehitmusic.hiphopbeats.adapter.PlayerAdapter;
+import com.makehitmusic.hiphopbeats.fragment.BeatsFragment;
 import com.makehitmusic.hiphopbeats.fragment.ProducersFragment;
 import com.makehitmusic.hiphopbeats.fragment.CategoryFragment;
 import com.makehitmusic.hiphopbeats.fragment.FavoritesFragment;
@@ -31,13 +33,15 @@ import com.makehitmusic.hiphopbeats.fragment.LibraryFragment;
 import com.makehitmusic.hiphopbeats.fragment.MoreFragment;
 import com.makehitmusic.hiphopbeats.presenter.MediaPlayerHolder;
 import com.makehitmusic.hiphopbeats.presenter.PlaybackInfoListener;
+import com.makehitmusic.hiphopbeats.utils.FragmentUtil;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener,
         CategoryFragment.OnFragmentInteractionListener, ProducersFragment.OnFragmentInteractionListener,
         FavoritesFragment.OnFragmentInteractionListener,
         LibraryFragment.OnFragmentInteractionListener,
-        MoreFragment.OnFragmentInteractionListener {
+        MoreFragment.OnFragmentInteractionListener,
+        BeatsFragment.OnFragmentInteractionListener {
 
     public static final String TAG = "MainActivity";
     public static final int MEDIA_RES_ID = R.raw.jazz_in_paris;
@@ -60,7 +64,9 @@ public class MainActivity extends AppCompatActivity
 
     // tags used to attach the fragments
     private static final String TAG_BEATS = "beats";
+    private static final String TAG_SUB_BEATS = "sub_beats";
     private static final String TAG_BEAT_PRODUCERS = "beat_producers";
+    private static final String LIST_BEAT_PRODUCERS = "list_beat_producers";
     private static final String TAG_FAVORITES = "favorites";
     private static final String TAG_LIBRARY = "library";
     private static final String TAG_ACCOUNT_SETTINGS = "account_settings";
@@ -72,6 +78,18 @@ public class MainActivity extends AppCompatActivity
     // flag to load home fragment when user presses back key
     private boolean shouldLoadHomeFragOnBackPress = true;
     private Handler mHandler;
+
+    public boolean isBeatsFragment = false;
+
+    public static Bundle beatsData;
+    public static int position;
+    public static int tabPosition;
+    public static int categoryId;
+    public static String categoryName;
+    public static int producerId;
+    public static String producerName;
+    public static String producerDescription;
+    public static String producerImage;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -108,7 +126,7 @@ public class MainActivity extends AppCompatActivity
         if (savedInstanceState == null) {
             navItemIndex = 0;
             CURRENT_TAG = TAG_BEATS;
-            loadHomeFragment();
+            loadHomeFragment(false);
         }
 
         initializePlaybackController();
@@ -178,22 +196,23 @@ public class MainActivity extends AppCompatActivity
      * Returns respected fragment that user
      * selected from navigation menu
      */
-    private void loadHomeFragment() {
+    private void loadHomeFragment(boolean flag) {
         // selecting appropriate nav menu item
         selectNavMenu();
 
-        // set toolbar title
-        setToolbarTitle();
-
         // if user select the current navigation menu again, don't do anything
         // just close the navigation drawer
-        if (getSupportFragmentManager().findFragmentByTag(CURRENT_TAG) != null) {
+        if ((getSupportFragmentManager().findFragmentByTag(CURRENT_TAG) != null) && !isBeatsFragment) {
             drawer.closeDrawers();
-
             // show or hide the fab button
             toggleFab();
             return;
         }
+
+        isBeatsFragment = flag;
+
+        // set toolbar title
+        setToolbarTitle();
 
         // Sometimes, when fragment has huge data, screen seems hanging
         // when switching between navigation menus
@@ -203,8 +222,20 @@ public class MainActivity extends AppCompatActivity
             @Override
             public void run() {
                 // update the main content by replacing fragments
-                Fragment fragment = getHomeFragment();
-                FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
+                Fragment fragment = null;
+                if (isBeatsFragment) {
+                    if (tabPosition == 1) {
+                        fragment = new BeatsFragment();
+                        fragment.setArguments(beatsData);
+                    } else if (tabPosition == 2) {
+                        fragment = new BeatsFragment();
+                        fragment.setArguments(beatsData);
+                    }
+                } else {
+                    fragment = getHomeFragment();
+                }
+                FragmentManager fragmentManager = getSupportFragmentManager();
+                FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
                 fragmentTransaction.setCustomAnimations(android.R.anim.fade_in,
                         android.R.anim.fade_out);
                 fragmentTransaction.replace(R.id.frame, fragment, CURRENT_TAG);
@@ -227,15 +258,34 @@ public class MainActivity extends AppCompatActivity
         invalidateOptionsMenu();
     }
 
+    public void loadBeatsFragment(Bundle parameters) {
+        isBeatsFragment = true;
+
+        beatsData = parameters;
+        position = parameters.getInt("position");
+        tabPosition = parameters.getInt("tab_position");
+        if (tabPosition == 1) {
+            categoryId = Integer.parseInt(parameters.getString("category_id"));
+            categoryName = parameters.getString("category_name");
+        }else if (tabPosition == 2) {
+            producerId = Integer.parseInt(parameters.getString("producer_id"));
+            producerName = parameters.getString("producer_name");
+            producerDescription = parameters.getString("producer_description");
+            producerImage = parameters.getString("producer_image");
+        }
+
+        loadHomeFragment(true);
+    }
+
     private Fragment getHomeFragment() {
         switch (navItemIndex) {
             case 0:
                 // beats
-                CategoryFragment categoryFragment = new CategoryFragment();
+                CategoryFragment categoryFragment = new CategoryFragment(MainActivity.this);
                 return categoryFragment;
             case 1:
                 // beat producers
-                ProducersFragment producersFragment = new ProducersFragment();
+                ProducersFragment producersFragment = new ProducersFragment(MainActivity.this);
                 return producersFragment;
             case 2:
                 // favorites
@@ -256,7 +306,15 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void setToolbarTitle() {
-        getSupportActionBar().setTitle(activityTitles[navItemIndex]);
+        if (isBeatsFragment) {
+            if (tabPosition == 1) {
+                getSupportActionBar().setTitle(categoryName);
+            } else if (tabPosition == 2) {
+                getSupportActionBar().setTitle(producerName);
+            }
+        } else {
+            getSupportActionBar().setTitle(activityTitles[navItemIndex]);
+        }
     }
 
     private void selectNavMenu() {
@@ -283,10 +341,40 @@ public class MainActivity extends AppCompatActivity
             // checking if user is on other navigation menu
             // rather than home
             if (navItemIndex != 0) {
-                navItemIndex = 0;
-                CURRENT_TAG = TAG_BEATS;
-                loadHomeFragment();
-                return;
+                if (isBeatsFragment) {
+                    if (tabPosition == 2) {
+                        navItemIndex = 1;
+                        CURRENT_TAG = TAG_BEAT_PRODUCERS;
+                        loadHomeFragment(false);
+                        isBeatsFragment = false;
+                        return;
+                    } else if (tabPosition == 1) {
+                        navItemIndex = 0;
+                        CURRENT_TAG = TAG_BEATS;
+                        loadHomeFragment(false);
+                        isBeatsFragment = false;
+                        return;
+                    }
+                } else {
+                    navItemIndex = 0;
+                    CURRENT_TAG = TAG_BEATS;
+                    loadHomeFragment(false);
+                    return;
+                }
+            } else if (navItemIndex == 0 && isBeatsFragment) {
+                if (tabPosition == 2) {
+                    navItemIndex = 1;
+                    CURRENT_TAG = TAG_BEAT_PRODUCERS;
+                    loadHomeFragment(false);
+                    isBeatsFragment = false;
+                    return;
+                } else if (tabPosition == 1) {
+                    navItemIndex = 0;
+                    CURRENT_TAG = TAG_BEATS;
+                    loadHomeFragment(false);
+                    isBeatsFragment = false;
+                    return;
+                }
             }
         }
 
@@ -341,7 +429,7 @@ public class MainActivity extends AppCompatActivity
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
 
-        loadHomeFragment();
+        loadHomeFragment(false);
         return true;
     }
 

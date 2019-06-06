@@ -163,10 +163,10 @@ public class MoreFragment extends Fragment {
                         if (account != null) {
                             revokeAccess();
                         } else {
-                            resetEverything();
+                            revokeAccess();
                         }
                     } else if (loginTypeInt == 2 && userCode != 0 && userId != 0) {
-                        resetEverything();
+                        revokeAccess();
                     } else {
                         revokeAccess();
                     }
