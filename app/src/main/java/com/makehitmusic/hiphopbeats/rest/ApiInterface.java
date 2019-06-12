@@ -1,6 +1,10 @@
 package com.makehitmusic.hiphopbeats.rest;
 
+import android.support.annotation.DrawableRes;
+
 import com.makehitmusic.hiphopbeats.model.CategoryResponse;
+import com.makehitmusic.hiphopbeats.model.FavouriteRequest;
+import com.makehitmusic.hiphopbeats.model.FavouriteResponse;
 import com.makehitmusic.hiphopbeats.model.LoginRequest;
 import com.makehitmusic.hiphopbeats.model.LoginResponse;
 import com.makehitmusic.hiphopbeats.presenter.JsonResponse;
@@ -24,7 +28,7 @@ public interface ApiInterface {
                                            @Query("android") String trueAndroid);
 
     @GET("mhmbeats/products.php")
-    Call<CategoryResponse> getBeatsDetails(@Query("userid") int userId,
+    Call<CategoryResponse> getBeatsDetails(@Query("user_id") int userId,
                                            @Query("latest") String latestBeats,
                                            @Query("android") String trueAndroid);
 
@@ -46,5 +50,8 @@ public interface ApiInterface {
 
     @POST("mhmbeats/social_login.php")
     Call<LoginResponse> postUserLogin(@Body LoginRequest loginRequest);
+
+    @POST("mhmbeats/favorites.php")
+    Call<FavouriteResponse> postFavoiritingBeat(@Body FavouriteRequest favouriteRequest);
 
 }

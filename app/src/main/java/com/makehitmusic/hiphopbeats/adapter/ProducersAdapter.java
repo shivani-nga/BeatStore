@@ -70,7 +70,7 @@ public class ProducersAdapter extends ArrayAdapter<ProducersObject> {
                     .transition(withCrossFade()).into(producerCover);
         }
         else {
-            producerCover.setImageDrawable(context.getResources().getDrawable(R.drawable.rounded_border));
+            producerCover.setImageDrawable(context.getResources().getDrawable(R.drawable.default_cover));
         }
 
         // Return the list item view that is now showing the appropriate data

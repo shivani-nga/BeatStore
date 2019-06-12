@@ -10,6 +10,7 @@
     <ListView
         android:id="@+id/list_producers_record"
         android:layout_width="match_parent"
+        android:layout_marginBottom="68dp"
         android:background="@color/colorPrimary"
         android:layout_height="match_parent"/>
 

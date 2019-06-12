@@ -1,16 +1,13 @@
 package com.makehitmusic.hiphopbeats.fragment;
 
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.IBinder;
 import android.support.v4.app.Fragment;
-import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SearchView;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -23,6 +20,7 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.CompoundButton;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
@@ -32,19 +30,16 @@ import android.widget.Toast;
 
 import com.makehitmusic.hiphopbeats.R;
 import com.makehitmusic.hiphopbeats.adapter.BeatsAdapter;
-import com.makehitmusic.hiphopbeats.adapter.CategoryAdapter;
-import com.makehitmusic.hiphopbeats.adapter.PlayerAdapter;
 import com.makehitmusic.hiphopbeats.model.BeatsObject;
-import com.makehitmusic.hiphopbeats.model.Category;
 import com.makehitmusic.hiphopbeats.model.CategoryResponse;
-import com.makehitmusic.hiphopbeats.presenter.MediaPlayerHolder;
-import com.makehitmusic.hiphopbeats.presenter.PlaybackInfoListener;
+import com.makehitmusic.hiphopbeats.model.FavouriteRequest;
+import com.makehitmusic.hiphopbeats.model.FavouriteResponse;
 import com.makehitmusic.hiphopbeats.rest.ApiClient;
 import com.makehitmusic.hiphopbeats.rest.ApiInterface;
+import com.makehitmusic.hiphopbeats.view.LoginScreen;
 import com.makehitmusic.hiphopbeats.view.MainActivity;
 
 import java.util.ArrayList;
-import java.util.List;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -71,7 +66,7 @@ public class FavoritesFragment extends Fragment implements SearchView.OnQueryTex
     private final int FAVORITES_TAB = 3;
     private final int LIBRARY_TAB = 4;
 
-    private PlayerAdapter mPlayerAdapter;
+    //private PlayerAdapter mPlayerAdapter;
 
     public int categoryId;
     ArrayList<BeatsObject> beatsList;
@@ -95,14 +90,23 @@ public class FavoritesFragment extends Fragment implements SearchView.OnQueryTex
 
     private Context mContext;
 
+    private BeatsAdapter mAdapter;
+
     SearchView searchView;
 
     Switch switchView;
+
+    public MainActivity mActivity;
 
     private boolean searchByBeats = true;
     private String searchedText = "";
 
     public FavoritesFragment() {
+        // Required empty public constructor
+    }
+
+    public FavoritesFragment(MainActivity activity) {
+        mActivity = activity;
         // Required empty public constructor
     }
 
@@ -167,53 +171,163 @@ public class FavoritesFragment extends Fragment implements SearchView.OnQueryTex
 //        View emptyView = rootView.findViewById(R.id.empty_view);
 //        producersListView.setEmptyView(emptyView);
 
-        ApiInterface apiService = ApiClient.getClient().create(ApiInterface.class);
+        SharedPreferences sharedPref = getActivity().getSharedPreferences(
+                getString(R.string.preference_login), Context.MODE_PRIVATE);
+        int loginTypeInt = sharedPref.getInt("LoginType", 0);
+        int userCode = sharedPref.getInt("UserCode", 0);
+        int userId = sharedPref.getInt("UserId", 0);
+        Log.d("UserID", String.valueOf(userId));
 
-        Call<CategoryResponse> call = apiService.getBeatsDetails(114909, "false", "true");
-        call.enqueue(new Callback<CategoryResponse>() {
-            @Override
-            public void onResponse(Call<CategoryResponse> call, Response<CategoryResponse> response) {
-                progressBar.setVisibility(View.GONE);
-                int statusCode = response.code();
-                beatsList = response.body().getBeatsResults();
+        if (loginTypeInt != 0 && userCode != 0 && userId != 0) {
+            ApiInterface apiService = ApiClient.getClient().create(ApiInterface.class);
 
-                if (beatsList.isEmpty()) {
+            Call<CategoryResponse> call = apiService.getBeatsDetails(userId, "true", "true");
+            call.enqueue(new Callback<CategoryResponse>() {
+                @Override
+                public void onResponse(Call<CategoryResponse> call, Response<CategoryResponse> response) {
+                    progressBar.setVisibility(View.GONE);
+                    int statusCode = response.code();
+                    beatsList = response.body().getBeatsResults();
+
+                    if (beatsList.isEmpty()) {
+                        emptyView.setVisibility(View.VISIBLE);
+                        emptyImage.setVisibility(View.VISIBLE);
+                        emptyText.setVisibility(View.VISIBLE);
+                        emptyImage.setImageResource(R.drawable.empty_view);
+                        emptyText.setText(R.string.empty_view_text);
+                    } else {
+                        emptyView.setVisibility(View.GONE);
+                        emptyImage.setVisibility(View.GONE);
+                        emptyText.setVisibility(View.GONE);
+                    }
+
+                    mAdapter = new BeatsAdapter(getActivity(), beatsList, 0);
+                    beatsListView.setAdapter(mAdapter);
+                }
+
+                @Override
+                public void onFailure(Call<CategoryResponse> call, Throwable t) {
+                    // Log error here since request failed
+                    Log.e(LOG_TAG, t.toString());
+
+                    progressBar.setVisibility(View.GONE);
                     emptyView.setVisibility(View.VISIBLE);
                     emptyImage.setVisibility(View.VISIBLE);
                     emptyText.setVisibility(View.VISIBLE);
-                    emptyImage.setImageResource(R.drawable.empty_view);
-                    emptyText.setText(R.string.empty_view_text);
-                } else {
-                    emptyView.setVisibility(View.GONE);
-                    emptyImage.setVisibility(View.GONE);
-                    emptyText.setVisibility(View.GONE);
+                    emptyImage.setImageResource(R.drawable.no_internet);
+                    emptyText.setText(R.string.no_internet);
                 }
+            });
+        } else {
+            beatsList = null;
+            progressBar.setVisibility(View.GONE);
+            emptyView.setVisibility(View.VISIBLE);
+            emptyImage.setVisibility(View.VISIBLE);
+            emptyText.setVisibility(View.VISIBLE);
+            emptyImage.setImageResource(R.drawable.empty_view);
+            emptyText.setText(R.string.empty_view_text);
 
-                beatsListView.setAdapter(new BeatsAdapter(getActivity(), beatsList, 0));
-            }
+            beatsListView.setAdapter(null);
+        }
 
-            @Override
-            public void onFailure(Call<CategoryResponse> call, Throwable t) {
-                // Log error here since request failed
-                Log.e(LOG_TAG, t.toString());
-
-                progressBar.setVisibility(View.GONE);
-                emptyView.setVisibility(View.VISIBLE);
-                emptyImage.setVisibility(View.VISIBLE);
-                emptyText.setVisibility(View.VISIBLE);
-                emptyImage.setImageResource(R.drawable.no_internet);
-                emptyText.setText(R.string.no_internet);
-            }
-        });
-
-        initializePlaybackController();
+        //initializePlaybackController();
 
         // Setup the item click listener
         beatsListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
-            public void onItemClick(AdapterView<?> adapterView, View view, int position, long id) {
-                BeatsObject beatsObject = beatsList.get(position);
-                mPlayerAdapter.playFromList(beatsObject.getItemSamplePath());
+            public void onItemClick(AdapterView<?> adapterView, View view, final int position, long id) {
+                long viewId = view.getId();
+                final View listItemView = view;
+                View parentRow = (View) listItemView.getParent();
+                LinearLayout rootView = (LinearLayout) parentRow.getParent();
+                final ListView listView = (ListView) listItemView.getParent();
+                final ImageView favouriteBeat = (ImageView) listItemView.findViewById(R.id.is_liked);
+
+                final BeatsObject beatsObject = beatsList.get(position);
+
+                SharedPreferences sharedPref = getActivity().getSharedPreferences(
+                        getString(R.string.preference_login), Context.MODE_PRIVATE);
+                int loginTypeInt = sharedPref.getInt("LoginType", 0);
+                int userCode = sharedPref.getInt("UserCode", 0);
+                int userId = sharedPref.getInt("UserId", 0);
+
+                ApiInterface apiService = ApiClient.getClient().create(ApiInterface.class);
+                FavouriteRequest favouriteRequest = null;
+
+                if (viewId == R.id.is_liked) {
+                    if (userId == 0) {
+                        Toast.makeText(mContext, "Oops, you need to sign in to do that", Toast.LENGTH_SHORT).show();
+                        SharedPreferences.Editor editor = sharedPref.edit();
+                        editor.putInt("LoginType", 0);
+                        editor.putInt("UserCode", 0);
+                        editor.putInt("UserId", 0);
+                        editor.apply();
+
+                        // Take the user to Login Screen
+                        Intent i = new Intent(getActivity(), LoginScreen.class);
+                        startActivity(i);
+                        //Toast.makeText(getActivity(), "Signed Out: Successfully", Toast.LENGTH_SHORT).show();
+
+                        getActivity().finish();
+                    } else {
+                        if ("false".equals(beatsObject.getIsLiked())) {
+                            favouriteRequest = new FavouriteRequest(String.valueOf(beatsObject.getItemId()), String.valueOf(userId), true);
+                        } else if ("true".equals(beatsObject.getIsLiked())) {
+                            favouriteRequest = new FavouriteRequest(String.valueOf(beatsObject.getItemId()), String.valueOf(userId), false);
+                        }
+
+                        Call<FavouriteResponse> call = apiService.postFavoiritingBeat(favouriteRequest);
+                        call.enqueue(new Callback<FavouriteResponse>() {
+                            @Override
+                            public void onResponse(Call<FavouriteResponse> call, Response<FavouriteResponse> response) {
+                                int statusCode = response.code();
+                                final String message = response.body().getMessage();
+
+                                Log.d("Message", message);
+                                if (message.equals("Successfully Added")) {
+                                    beatsObject.setIsLiked(true);
+                                    favouriteBeat.setImageDrawable(mContext.getResources().getDrawable(R.drawable.favorite_24));
+                                }
+                                else if (message.equals("Successfully Removed")) {
+                                    beatsObject.setIsLiked(false);
+                                    mAdapter.remove(beatsObject);
+                                    mAdapter.notifyDataSetChanged();
+                                    favouriteBeat.setImageDrawable(mContext.getResources().getDrawable(R.drawable.favorite_border_24));
+                                }
+                            }
+
+                            @Override
+                            public void onFailure(Call<FavouriteResponse> call, Throwable t) {
+                                // Log error here since request failed
+                                Log.e(LOG_TAG, t.toString());
+                            }
+                        });
+
+                    }
+                } else if (viewId == R.id.beat_price) {
+                    if (userId == 0) {
+                        Toast.makeText(mContext, "Oops, you need to sign in to do that", Toast.LENGTH_SHORT).show();
+                        SharedPreferences.Editor editor = sharedPref.edit();
+                        editor.putInt("LoginType", 0);
+                        editor.putInt("UserCode", 0);
+                        editor.putInt("UserId", 0);
+                        editor.apply();
+
+                        // Take the user to Login Screen
+                        Intent i = new Intent(getActivity(), LoginScreen.class);
+                        startActivity(i);
+                        //Toast.makeText(getActivity(), "Signed Out: Successfully", Toast.LENGTH_SHORT).show();
+
+                        getActivity().finish();
+                    } else {
+
+                    }
+                } else {
+                    ArrayList<BeatsObject> playingQueue = new ArrayList<BeatsObject>(beatsList.subList(position, beatsList.size()));
+                    mActivity.playAudio(playingQueue);
+                }
+
+                //mPlayerAdapter.playFromList(beatsObject.getItemSamplePath());
                 //mMainActivity.changeMusicContent(beatsObject.getItemName(), beatsObject.getItemImageBig(),
                 //beatsObject.getProducerName(), beatsObject.getIsLiked(), beatsObject.getItemPrice());
             }
@@ -221,39 +335,39 @@ public class FavoritesFragment extends Fragment implements SearchView.OnQueryTex
         return rootView;
     }
 
-    private void initializePlaybackController() {
-        MediaPlayerHolder mMediaPlayerHolder = new MediaPlayerHolder(getActivity());
-        Log.d(LOG_TAG, "initializePlaybackController: created MediaPlayerHolder");
-        mMediaPlayerHolder.setPlaybackInfoListener(new FavoritesFragment.PlaybackListener());
-        mPlayerAdapter = mMediaPlayerHolder;
-        Log.d(LOG_TAG, "initializePlaybackController: MediaPlayerHolder progress callback set");
-    }
+//    private void initializePlaybackController() {
+//        MediaPlayerHolder mMediaPlayerHolder = new MediaPlayerHolder(getActivity());
+//        Log.d(LOG_TAG, "initializePlaybackController: created MediaPlayerHolder");
+//        mMediaPlayerHolder.setPlaybackInfoListener(new FavoritesFragment.PlaybackListener());
+//        mPlayerAdapter = mMediaPlayerHolder;
+//        Log.d(LOG_TAG, "initializePlaybackController: MediaPlayerHolder progress callback set");
+//    }
 
-    public class PlaybackListener extends PlaybackInfoListener {
-
-        @Override
-        public void onDurationChanged(int duration) {
-            Log.d(LOG_TAG, String.format("setPlaybackDuration: setMax(%d)", duration));
-        }
-
-        @Override
-        public void onPositionChanged(int position) {
-            Log.d(LOG_TAG, String.format("setPlaybackPosition: setProgress(%d)", position));
-        }
-
-        @Override
-        public void onStateChanged(@State int state) {
-        }
-
-        @Override
-        public void onPlaybackCompleted() {
-        }
-
-        @Override
-        public void onLogUpdated(String message) {
-
-        }
-    }
+//    public class PlaybackListener extends PlaybackInfoListener {
+//
+//        @Override
+//        public void onDurationChanged(int duration) {
+//            Log.d(LOG_TAG, String.format("setPlaybackDuration: setMax(%d)", duration));
+//        }
+//
+//        @Override
+//        public void onPositionChanged(int position) {
+//            Log.d(LOG_TAG, String.format("setPlaybackPosition: setProgress(%d)", position));
+//        }
+//
+//        @Override
+//        public void onStateChanged(@State int state) {
+//        }
+//
+//        @Override
+//        public void onPlaybackCompleted() {
+//        }
+//
+//        @Override
+//        public void onLogUpdated(String message) {
+//
+//        }
+//    }
 
     // TODO: Rename method, update argument and hook method into UI event
     public void onButtonPressed(Uri uri) {

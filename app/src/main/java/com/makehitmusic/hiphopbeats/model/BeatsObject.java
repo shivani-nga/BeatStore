@@ -136,6 +136,10 @@ public class BeatsObject {
         return isLiked;
     }
 
+    public void setIsLiked(boolean isLiked) {
+        this.isLiked = String.valueOf(isLiked);
+    }
+
     public List<Category> getBeatsCategory() {
         return beatsCategory;
     }

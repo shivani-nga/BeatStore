@@ -41,7 +41,6 @@ import com.makehitmusic.hiphopbeats.model.CategoryResponse;
 import com.makehitmusic.hiphopbeats.presenter.JsonResponse;
 import com.makehitmusic.hiphopbeats.rest.ApiClient;
 import com.makehitmusic.hiphopbeats.rest.ApiInterface;
-import com.makehitmusic.hiphopbeats.view.BeatsActivity;
 import com.makehitmusic.hiphopbeats.view.MainActivity;
 
 import java.util.ArrayList;

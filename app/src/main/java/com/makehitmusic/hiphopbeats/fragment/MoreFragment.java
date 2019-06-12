@@ -127,6 +127,7 @@ public class MoreFragment extends Fragment {
         String urlApps = "https://itunes.apple.com/us/app/make-hit-music-hip-hop-studio/id1438351352?ls=1&mt=8";
         String urlSell = "https://pages.convertkit.com/ea2996f0bb/ca7fa96488";
         String urlIdea = "https://my.appideatoreality.com";
+        String urlReview = "https://play.google.com/store/apps/details?id=com.makehitmusic.hiphopbeats";
         String urlTerms = "https://makehitmusic.net/apps/mogul/terms-of-use/";
         String urlPolicy = "https://makehitmusic.net/apps/mogul/privacy-policy/";
 
@@ -156,21 +157,31 @@ public class MoreFragment extends Fragment {
                     int loginTypeInt = sharedPref.getInt("LoginType", 0);
                     int userCode = sharedPref.getInt("UserCode", 0);
                     int userId = sharedPref.getInt("UserId", 0);
-                    if (loginTypeInt == 1 && userCode != 0 && userId != 0) {
-                        // Check for existing Google Sign In account, if the user is already signed in
-                        // the GoogleSignInAccount will be non-null.
-                        GoogleSignInAccount account = GoogleSignIn.getLastSignedInAccount(getActivity());
-                        if (account != null) {
-                            revokeAccess();
-                        } else {
-                            revokeAccess();
-                        }
-                    } else if (loginTypeInt == 2 && userCode != 0 && userId != 0) {
-                        revokeAccess();
-                    } else {
-                        revokeAccess();
-                    }
+//                    if (loginTypeInt == 1 && userCode != 0 && userId != 0) {
+//                        // Check for existing Google Sign In account, if the user is already signed in
+//                        // the GoogleSignInAccount will be non-null.
+//                        GoogleSignInAccount account = GoogleSignIn.getLastSignedInAccount(getActivity());
+//                        if (account != null) {
+//                            revokeAccess();
+//                        } else {
+//                            revokeAccess();
+//                        }
+//                    } else if (loginTypeInt == 2 && userCode != 0 && userId != 0) {
+//                        revokeAccess();
+//                    } else {
+//                        revokeAccess();
+//                    }
+                    revokeAccess();
 
+                    return true;
+                }
+            });
+
+            // Restoring Preference Click Listener
+            Preference restorePreference = findPreference(getString(R.string.key_purchases));
+            restorePreference.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+                public boolean onPreferenceClick(Preference preference) {
+                    Toast.makeText(getActivity(), "Purchases have been restored", Toast.LENGTH_SHORT).show();
                     return true;
                 }
             });
@@ -215,6 +226,17 @@ public class MoreFragment extends Fragment {
                     Intent ideaIntent = new Intent(Intent.ACTION_VIEW);
                     ideaIntent.setData(Uri.parse(urlIdea));
                     startActivity(ideaIntent);
+                    return true;
+                }
+            });
+
+            // Review Preference Click Listener
+            Preference reviewPreference = findPreference(getString(R.string.key_review));
+            reviewPreference.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+                public boolean onPreferenceClick(Preference preference) {
+                    Intent reviewIntent = new Intent(Intent.ACTION_VIEW);
+                    reviewIntent.setData(Uri.parse(urlReview));
+                    startActivity(reviewIntent);
                     return true;
                 }
             });

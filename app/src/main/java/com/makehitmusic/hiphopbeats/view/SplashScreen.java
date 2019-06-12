@@ -9,9 +9,11 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.preference.PreferenceManager;
+import android.support.annotation.NonNull;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.text.Html;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -20,12 +22,17 @@ import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.facebook.AccessToken;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
+import com.google.android.gms.auth.api.signin.GoogleSignInClient;
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.common.Scopes;
 import com.google.android.gms.common.api.Scope;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
 import com.makehitmusic.hiphopbeats.R;
 
 public class SplashScreen extends Activity {
@@ -46,6 +53,8 @@ public class SplashScreen extends Activity {
     // Identifier to check whether user is logged in using Facebook or not
     public boolean isFacebookLoggedIn = false;
 
+    private GoogleSignInClient mGoogleSignInClient;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -56,6 +65,15 @@ public class SplashScreen extends Activity {
         }
 
         setContentView(R.layout.activity_splash);
+
+        GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                .requestIdToken(getString(R.string.server_client_id))
+                .requestScopes(new Scope(Scopes.DRIVE_APPFOLDER))
+                .requestEmail()
+                .build();
+
+        // Build GoogleAPIClient with the Google Sign-In API and the above options.
+        mGoogleSignInClient = GoogleSignIn.getClient(this, gso);
 
         viewPager = (ViewPager) findViewById(R.id.view_pager);
         dotsLayout = (LinearLayout) findViewById(R.id.layoutDots);
@@ -107,13 +125,46 @@ public class SplashScreen extends Activity {
         int userCode = sharedPref.getInt("UserCode", 0);
         int userId = sharedPref.getInt("UserId", 0);
 
-        if (userCode != 0 && userId != 0) {
+        if (loginTypeInt != 0 && userCode != 0 && userId != 0) {
             isLoggedIn = true;
-            launchHomeScreen();
+            if (loginTypeInt == 1) {
+                checkGoogleLogin();
+            } else if (loginTypeInt == 2) {
+                //checkFacebookLogin();
+                launchHomeScreen();
+            }
+            Log.d("LoginTypeInt", String.valueOf(loginTypeInt));
+            Log.d("UserCode", String.valueOf(userCode));
+            Log.d("UserId", String.valueOf(userId));
+//            launchHomeScreen();
         } else {
             isLoggedIn = false;
+            revokeAccess();
         }
 
+//        // Check if the user is already signed in and all required scopes are granted
+//        GoogleSignInAccount account = GoogleSignIn.getLastSignedInAccount(this);
+//        if (account != null && GoogleSignIn.hasPermissions(account, new Scope(Scopes.DRIVE_APPFOLDER))) {
+//            isGoogleLoggedIn = true;
+//            launchHomeScreen();
+//        } else {
+//            isGoogleLoggedIn = false;
+//            revokeAccess();
+//        }
+//
+//        // Check if the user is already signed in using Facebook
+//        AccessToken accessToken = AccessToken.getCurrentAccessToken();
+//        if (accessToken != null && !accessToken.isExpired()) {
+//            isFacebookLoggedIn = accessToken != null && !accessToken.isExpired();
+//            launchHomeScreen();
+//        } else {
+//            isFacebookLoggedIn = false;
+//            revokeAccess();
+//        }
+
+    }
+
+    private void checkGoogleLogin() {
         // Check if the user is already signed in and all required scopes are granted
         GoogleSignInAccount account = GoogleSignIn.getLastSignedInAccount(this);
         if (account != null && GoogleSignIn.hasPermissions(account, new Scope(Scopes.DRIVE_APPFOLDER))) {
@@ -121,18 +172,20 @@ public class SplashScreen extends Activity {
             launchHomeScreen();
         } else {
             isGoogleLoggedIn = false;
+            revokeAccess();
         }
+    }
 
+    private void checkFacebookLogin() {
         // Check if the user is already signed in using Facebook
-
         AccessToken accessToken = AccessToken.getCurrentAccessToken();
         if (accessToken != null && !accessToken.isExpired()) {
             isFacebookLoggedIn = accessToken != null && !accessToken.isExpired();
             launchHomeScreen();
         } else {
             isFacebookLoggedIn = false;
+            revokeAccess();
         }
-
     }
 
     private void addBottomDots(int currentPage) {
@@ -163,7 +216,7 @@ public class SplashScreen extends Activity {
             // User is already logged in so load MainActivity
             Intent i = new Intent(SplashScreen.this, MainActivity.class);
             startActivity(i);
-        } else if (!isLoggedIn && !isGoogleLoggedIn && !isFacebookLoggedIn) {
+        } else {
             // User is not logged in so load LoginScreen
             Intent i = new Intent(SplashScreen.this, LoginScreen.class);
             startActivity(i);
@@ -171,6 +224,36 @@ public class SplashScreen extends Activity {
 
         // close this activity
         finish();
+    }
+
+    public void revokeAccess() {
+        mGoogleSignInClient.revokeAccess()
+                .addOnCompleteListener(this, new OnCompleteListener<Void>() {
+                    @Override
+                    public void onComplete(@NonNull Task<Void> task) {
+                        signOut();
+                    }
+                });
+    }
+
+    public void signOut() {
+        mGoogleSignInClient.signOut()
+                .addOnCompleteListener(this, new OnCompleteListener<Void>() {
+                    @Override
+                    public void onComplete(@NonNull Task<Void> task) {
+                        resetEverything();
+                    }
+                });
+    }
+
+    public void resetEverything() {
+        SharedPreferences sharedPref = this.getSharedPreferences(
+                getString(R.string.preference_login), Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPref.edit();
+        editor.putInt("LoginType", 0);
+        editor.putInt("UserCode", 0);
+        editor.putInt("UserId", 0);
+        editor.apply();
     }
 
     //  viewpager change listener

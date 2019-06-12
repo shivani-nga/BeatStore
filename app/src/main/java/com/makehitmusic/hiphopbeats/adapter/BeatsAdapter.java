@@ -118,8 +118,14 @@ public class BeatsAdapter extends ArrayAdapter<BeatsObject> {
                     .apply(new RequestOptions().placeholder(R.drawable.highlight_color).error(R.drawable.highlight_color))
                     .transition(withCrossFade()).into(beatCover);
         }
+        else if (!(currentBeat.getProducerImage().equals(BASE_URL))) {
+            Glide.with(context).load(currentBeat.getProducerImage())
+                    //.placeholder(R.drawable.twotone_library_music_24)
+                    .apply(new RequestOptions().placeholder(R.drawable.highlight_color).error(R.drawable.highlight_color))
+                    .transition(withCrossFade()).into(beatCover);
+        }
         else {
-            beatCover.setImageDrawable(context.getResources().getDrawable(R.drawable.rounded_border));
+            beatCover.setImageDrawable(context.getResources().getDrawable(R.drawable.default_cover));
         }
 
         if (flag == 0) {
@@ -134,6 +140,22 @@ public class BeatsAdapter extends ArrayAdapter<BeatsObject> {
             // Display the beat_price of the current beat in that TextView
             beatPrice.setText("$" + String.valueOf(currentBeat.getItemPrice()));
 
+            beatPrice.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    View parentRow = (View) v.getParent();
+                    LinearLayout rootView = (LinearLayout) parentRow.getParent();
+                    ListView listView = (ListView) rootView.getParent();
+                    final int position = listView.getPositionForView(rootView);
+                    Log.d("Position", String.valueOf(position));
+
+                    // Find the beat at the given position in the list of beats
+                    final BeatsObject currentBeat = getItem(position);
+
+                    (listView).performItemClick(v, position, 0);
+                }
+            });
+
             // Find the ImageView with view ID is_liked
             ImageView isLiked = (ImageView) listItemView.findViewById(R.id.is_liked);
             // Display the is_liked of the current beat in that ImageView
@@ -142,6 +164,22 @@ public class BeatsAdapter extends ArrayAdapter<BeatsObject> {
             } else if ("false".equals(currentBeat.getIsLiked())) {
                 isLiked.setImageDrawable(context.getResources().getDrawable(R.drawable.favorite_border_24));
             }
+
+            isLiked.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    View parentRow = (View) v.getParent();
+                    LinearLayout rootView = (LinearLayout) parentRow.getParent();
+                    ListView listView = (ListView) rootView.getParent();
+                    final int position = listView.getPositionForView(rootView);
+                    Log.d("Position", String.valueOf(position));
+
+                    // Find the beat at the given position in the list of beats
+                    final BeatsObject currentBeat = getItem(position);
+
+                    (listView).performItemClick(v, position, 0);
+                }
+            });
         }
 
         if (flag == 1) {

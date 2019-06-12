@@ -5,11 +5,12 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".view.BeatsActivity">
+    tools:context=".fragment.BeatsFragment">
 
     <ListView
         android:id="@+id/list_beats_record"
         android:layout_width="match_parent"
+        android:layout_marginBottom="68dp"
         android:background="@color/colorPrimary"
         android:layout_height="match_parent"/>
 

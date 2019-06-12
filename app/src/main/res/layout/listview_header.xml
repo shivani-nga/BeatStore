@@ -9,13 +9,12 @@
 
     <ImageView
         android:id="@+id/producer_cover"
-        android:layout_width="0dp"
+        android:layout_width="100dp"
         android:layout_height="100dp"
-        android:layout_weight="3"
         android:layout_gravity="top"
         android:gravity="center"
         tools:src="@drawable/ic_launcher_background"
-        android:scaleType="centerCrop"
+        android:scaleType="center"
         android:layout_marginEnd="10dp"
         android:background="@drawable/rounded_border" />
 
@@ -29,7 +28,7 @@
             android:id="@+id/producer_title"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textSize="22sp"
+            android:textSize="20sp"
             android:layout_gravity="top|start"
             android:maxLines="1"
             android:ellipsize="end"
@@ -46,7 +45,7 @@
             app:trimLines="4"
             app:showTrimExpandedText="true"
             app:colorClickableText="@color/colorAccent"
-            android:textSize="16sp"
+            android:textSize="15sp"
             android:layout_gravity="center_vertical"
             android:textColor="@color/colorPrimaryDark"
             tools:text="The producer description goes here with upto 4 wrapped lines to text. The producer description goes here with upto 4 wrapped lines to text. The producer description goes here with upto 4 wrapped lines to text."/>

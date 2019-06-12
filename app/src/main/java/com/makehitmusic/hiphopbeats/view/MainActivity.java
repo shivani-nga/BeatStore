@@ -1,8 +1,19 @@
 package com.makehitmusic.hiphopbeats.view;
 
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.content.ComponentName;
+import android.content.ContentResolver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.ServiceConnection;
+import android.database.Cursor;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.IBinder;
+import android.provider.MediaStore;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
@@ -22,18 +33,23 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.makehitmusic.hiphopbeats.R;
-import com.makehitmusic.hiphopbeats.adapter.PlayerAdapter;
 import com.makehitmusic.hiphopbeats.fragment.BeatsFragment;
 import com.makehitmusic.hiphopbeats.fragment.ProducersFragment;
 import com.makehitmusic.hiphopbeats.fragment.CategoryFragment;
 import com.makehitmusic.hiphopbeats.fragment.FavoritesFragment;
 import com.makehitmusic.hiphopbeats.fragment.LibraryFragment;
 import com.makehitmusic.hiphopbeats.fragment.MoreFragment;
-import com.makehitmusic.hiphopbeats.presenter.MediaPlayerHolder;
-import com.makehitmusic.hiphopbeats.presenter.PlaybackInfoListener;
-import com.makehitmusic.hiphopbeats.utils.FragmentUtil;
+import com.makehitmusic.hiphopbeats.model.BeatsObject;
+import com.makehitmusic.hiphopbeats.utils.MediaPlayerService;
+import com.makehitmusic.hiphopbeats.utils.StorageUtil;
+import com.sothree.slidinguppanel.SlidingUpPanelLayout;
+
+import java.util.ArrayList;
+
+import static com.makehitmusic.hiphopbeats.utils.MediaPlayerService.CHANNEL_ID;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener,
@@ -44,16 +60,37 @@ public class MainActivity extends AppCompatActivity
         BeatsFragment.OnFragmentInteractionListener {
 
     public static final String TAG = "MainActivity";
-    public static final int MEDIA_RES_ID = R.raw.jazz_in_paris;
+    //public static final int MEDIA_RES_ID = R.raw.jazz_in_paris;
 
-    private PlayerAdapter mPlayerAdapter;
+    //private PlayerAdapter mPlayerAdapter;
     private boolean mUserIsSeeking = false;
+
+    private MediaPlayerService player;
+    private Intent playIntent;
+    boolean serviceBound = false;
+
+    ArrayList<BeatsObject> audioList;
 
     ImageView mBeatCover;
     TextView mBeatName;
+    TextView mProducerName;
     ImageView mPlayButton;
-    ImageView mPauseButton;
     ImageView mNextButton;
+
+    ImageView mBeatCoverBig;
+    TextView mBeatNameBig;
+    TextView mProducerNameBig;
+    ImageView mVolumeDown;
+    SeekBar mVolumeSeekbar;
+    ImageView mVolumeUp;
+    ImageView mFavourite;
+    TextView mBeatPrice;
+    SeekBar mAudioSeekbar;
+    TextView mCurrentTime;
+    TextView mFullTime;
+    ImageView mPreviousButtonBig;
+    ImageView mPlayButtonBig;
+    ImageView mNextButtonBig;
 
     // index to identify current nav menu item
     public static int navItemIndex = 0;
@@ -75,6 +112,10 @@ public class MainActivity extends AppCompatActivity
     // toolbar titles respected to selected nav menu item
     private String[] activityTitles;
 
+    private SlidingUpPanelLayout mSlidingLayout;
+    LinearLayout mBottomBar;
+    LinearLayout mNowPlaying;
+
     // flag to load home fragment when user presses back key
     private boolean shouldLoadHomeFragOnBackPress = true;
     private Handler mHandler;
@@ -91,10 +132,39 @@ public class MainActivity extends AppCompatActivity
     public static String producerDescription;
     public static String producerImage;
 
+    // Change to your package name
+    public static final String Broadcast_PLAY_NEW_AUDIO = "com.makehitmusic.hiphopbeats.PlayNewAudio";
+
+    //Binding this Client to the AudioPlayer Service
+    private ServiceConnection serviceConnection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            // We've bound to LocalService, cast the IBinder and get LocalService instance
+            MediaPlayerService.LocalBinder binder = (MediaPlayerService.LocalBinder) service;
+            player = binder.getService();
+            serviceBound = true;
+
+            //Toast.makeText(MainActivity.this, "Service Bound", Toast.LENGTH_SHORT).show();
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            serviceBound = false;
+        }
+    };
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        createNotificationChannel();
+
+
+//        //play the first audio in the ArrayList
+//        playAudio(audioList.get(0).getData());
+
+        //playAudio("https://upload.wikimedia.org/wikipedia/commons/6/6c/Grieg_Lyric_Pieces_Kobold.ogg");
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -129,7 +199,42 @@ public class MainActivity extends AppCompatActivity
             loadHomeFragment(false);
         }
 
-        initializePlaybackController();
+        mBottomBar = (LinearLayout) findViewById(R.id.bottom_bar);
+        mNowPlaying = (LinearLayout) findViewById(R.id.now_playing);
+        mSlidingLayout = (SlidingUpPanelLayout) findViewById(R.id.sliding_layout);
+        mSlidingLayout.addPanelSlideListener(new SlidingUpPanelLayout.PanelSlideListener() {
+            @Override
+            public void onPanelSlide(View panel, float slideOffset) {
+                Log.i(TAG, "onPanelSlide, offset " + slideOffset);
+            }
+
+            @Override
+            public void onPanelStateChanged(View panel, SlidingUpPanelLayout.PanelState previousState, SlidingUpPanelLayout.PanelState newState) {
+                Log.i(TAG, "onPanelStateChanged " + newState);
+                if (newState == SlidingUpPanelLayout.PanelState.EXPANDED) {
+                    mBottomBar.animate().alpha(0.0f);
+                    mBottomBar.setVisibility(View.GONE);
+                    mNowPlaying.animate().alpha(1.0f);
+                    mNowPlaying.setVisibility(View.VISIBLE);
+                }
+                else if (newState == SlidingUpPanelLayout.PanelState.COLLAPSED) {
+                    mNowPlaying.animate().alpha(0.0f);
+                    mNowPlaying.setVisibility(View.GONE);
+                    mBottomBar.animate().alpha(1.0f);
+                    mBottomBar.setVisibility(View.VISIBLE);
+                }
+            }
+        });
+        mSlidingLayout.setFadeOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mSlidingLayout.setPanelState(SlidingUpPanelLayout.PanelState.COLLAPSED);
+            }
+        });
+
+        initializeUI();
+        initializeSeekbar();
+        //initializePlaybackController();
     }
 
     @Override
@@ -142,55 +247,187 @@ public class MainActivity extends AppCompatActivity
     @Override
     protected void onStop() {
         super.onStop();
-        if (isChangingConfigurations() && mPlayerAdapter.isPlaying()) {
-            Log.d(TAG, "onStop: don't release MediaPlayer as screen is rotating & playing");
+//        if (isChangingConfigurations() && mPlayerAdapter.isPlaying()) {
+//            Log.d(TAG, "onStop: don't release MediaPlayer as screen is rotating & playing");
+//        } else {
+//            mPlayerAdapter.release();
+//            Log.d(TAG, "onStop: release MediaPlayer");
+//        }
+    }
+
+//    private void loadAudio(ArrayList<BeatsObject> queue) {
+//        ContentResolver contentResolver = getContentResolver();
+//
+//        Uri uri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
+//        String selection = MediaStore.Audio.Media.IS_MUSIC + "!= 0";
+//        String sortOrder = MediaStore.Audio.Media.TITLE + " ASC";
+//        Cursor cursor = contentResolver.query(uri, null, selection, null, sortOrder);
+//
+//        if (cursor != null && cursor.getCount() > 0) {
+//            audioList = new ArrayList<>();
+//            while (cursor.moveToNext()) {
+//                String data = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.DATA));
+//                String title = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.TITLE));
+//                String album = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.ALBUM));
+//                String artist = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.ARTIST));
+//
+//                // Save to audioList
+//                audioList.add(new BeatsObject(data, title, album, artist));
+//            }
+//        }
+//        cursor.close();
+//    }
+
+    private void initializeUI() {
+        mBeatCover = (ImageView) findViewById(R.id.current_beat_cover);
+        mBeatName = (TextView) findViewById(R.id.current_beat_name);
+        mProducerName = (TextView) findViewById(R.id.current_producer_name);
+        mPlayButton = (ImageView) findViewById(R.id.button_play_pause);
+        mNextButton = (ImageView) findViewById(R.id.button_next);
+        mBeatCoverBig = (ImageView) findViewById(R.id.current_beat_cover_big);
+        mBeatNameBig = (TextView) findViewById(R.id.current_beat_name_big);
+        mProducerNameBig = (TextView) findViewById(R.id.current_producer_name_big);
+        mVolumeDown = (ImageView) findViewById(R.id.volume_down);
+        mVolumeUp = (ImageView) findViewById(R.id.volume_up);
+        mVolumeSeekbar = (SeekBar) findViewById(R.id.volume_seekbar);
+        mFavourite = (ImageView) findViewById(R.id.make_favorite);
+        mBeatPrice = (TextView) findViewById(R.id.beat_price);
+        mAudioSeekbar = (SeekBar) findViewById(R.id.audio_seekbar);
+        mCurrentTime = (TextView) findViewById(R.id.current_time);
+        mFullTime = (TextView) findViewById(R.id.full_time);
+        mPreviousButtonBig = (ImageView) findViewById(R.id.previous_button);
+        mPlayButtonBig = (ImageView) findViewById(R.id.play_button);
+        mNextButtonBig = (ImageView) findViewById(R.id.next_button);
+
+        mPlayButton.setOnClickListener(
+                new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+//                      mPlayerAdapter.play();
+                    }
+                });
+        mNextButton.setOnClickListener(
+                new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+//                      mPlayerAdapter.reset();
+                    }
+                });
+    }
+
+    private void initializeSeekbar() {
+        mAudioSeekbar.setOnSeekBarChangeListener(
+                new SeekBar.OnSeekBarChangeListener() {
+                    int userSelectedPosition = 0;
+
+                    @Override
+                    public void onStartTrackingTouch(SeekBar seekBar) {
+                        mUserIsSeeking = true;
+                    }
+
+                    @Override
+                    public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                        if (fromUser) {
+                            userSelectedPosition = progress;
+                        }
+                    }
+
+                    @Override
+                    public void onStopTrackingTouch(SeekBar seekBar) {
+                        mUserIsSeeking = false;
+                        //mPlayerAdapter.seekTo(userSelectedPosition);
+                    }
+                });
+    }
+
+    public void playAudio(ArrayList<BeatsObject> audioList) {
+        //Check if service is active
+        if (!serviceBound) {
+            //Store Serializable audioList to SharedPreferences
+            StorageUtil storage = new StorageUtil(getApplicationContext());
+            storage.storeAudio(audioList);
+            storage.storeAudioIndex(0);
+
+
+            Intent playerIntent = new Intent(this, MediaPlayerService.class);
+            startService(playerIntent);
+            bindService(playerIntent, serviceConnection, Context.BIND_AUTO_CREATE);
         } else {
-            mPlayerAdapter.release();
-            Log.d(TAG, "onStop: release MediaPlayer");
+            //Store the new audioList and audioIndex to SharedPreferences
+            StorageUtil storage = new StorageUtil(getApplicationContext());
+            storage.storeAudio(audioList);
+            storage.storeAudioIndex(0);
+
+            //Service is active
+            //Send a broadcast to the service -> PLAY_NEW_AUDIO
+            Intent broadcastIntent = new Intent(Broadcast_PLAY_NEW_AUDIO);
+            sendBroadcast(broadcastIntent);
         }
     }
 
-    private void initializePlaybackController() {
-        MediaPlayerHolder mMediaPlayerHolder = new MediaPlayerHolder(this);
-        Log.d(TAG, "initializePlaybackController: created MediaPlayerHolder");
-        mMediaPlayerHolder.setPlaybackInfoListener(new PlaybackListener());
-        mPlayerAdapter = mMediaPlayerHolder;
-        Log.d(TAG, "initializePlaybackController: MediaPlayerHolder progress callback set");
+    @Override
+    public void onSaveInstanceState(Bundle savedInstanceState) {
+        savedInstanceState.putBoolean("ServiceState", serviceBound);
+        super.onSaveInstanceState(savedInstanceState);
     }
 
-    public class PlaybackListener extends PlaybackInfoListener {
+    @Override
+    public void onRestoreInstanceState(Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+        serviceBound = savedInstanceState.getBoolean("ServiceState");
+    }
 
-        @Override
-        public void onDurationChanged(int duration) {
-            Log.d(TAG, String.format("setPlaybackDuration: setMax(%d)", duration));
-        }
-
-        @Override
-        public void onPositionChanged(int position) {
-            if (!mUserIsSeeking) {
-                Log.d(TAG, String.format("setPlaybackPosition: setProgress(%d)", position));
-            }
-        }
-
-        @Override
-        public void onStateChanged(@State int state) {
-            String stateToString = PlaybackInfoListener.convertStateToString(state);
-            onLogUpdated(String.format("onStateChanged(%s)", stateToString));
-        }
-
-        @Override
-        public void onPlaybackCompleted() {
-        }
-
-        @Override
-        public void onLogUpdated(String message) {
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (serviceBound) {
+            unbindService(serviceConnection);
+            //service is active
+            player.stopSelf();
         }
     }
 
-    public void changeMusicContent(String beatName, String beatImageUrl, String producerName,
-                                   String isLiked, double beatPrice) {
-        mBeatName.setText(beatName);
-    }
+//    private void initializePlaybackController() {
+//        MediaPlayerHolder mMediaPlayerHolder = new MediaPlayerHolder(this);
+//        Log.d(TAG, "initializePlaybackController: created MediaPlayerHolder");
+//        mMediaPlayerHolder.setPlaybackInfoListener(new PlaybackListener());
+//        mPlayerAdapter = mMediaPlayerHolder;
+//        Log.d(TAG, "initializePlaybackController: MediaPlayerHolder progress callback set");
+//    }
+
+//    public class PlaybackListener extends PlaybackInfoListener {
+//
+//        @Override
+//        public void onDurationChanged(int duration) {
+//            Log.d(TAG, String.format("setPlaybackDuration: setMax(%d)", duration));
+//        }
+//
+//        @Override
+//        public void onPositionChanged(int position) {
+//            if (!mUserIsSeeking) {
+//                Log.d(TAG, String.format("setPlaybackPosition: setProgress(%d)", position));
+//            }
+//        }
+//
+//        @Override
+//        public void onStateChanged(@State int state) {
+//            String stateToString = PlaybackInfoListener.convertStateToString(state);
+//            onLogUpdated(String.format("onStateChanged(%s)", stateToString));
+//        }
+//
+//        @Override
+//        public void onPlaybackCompleted() {
+//        }
+//
+//        @Override
+//        public void onLogUpdated(String message) {
+//        }
+//    }
+
+//    public void changeMusicContent(String beatName, String beatImageUrl, String producerName,
+//                                   String isLiked, double beatPrice) {
+//        mBeatName.setText(beatName);
+//    }
 
     /***
      * Returns respected fragment that user
@@ -225,10 +462,10 @@ public class MainActivity extends AppCompatActivity
                 Fragment fragment = null;
                 if (isBeatsFragment) {
                     if (tabPosition == 1) {
-                        fragment = new BeatsFragment();
+                        fragment = new BeatsFragment(MainActivity.this);
                         fragment.setArguments(beatsData);
                     } else if (tabPosition == 2) {
-                        fragment = new BeatsFragment();
+                        fragment = new BeatsFragment(MainActivity.this);
                         fragment.setArguments(beatsData);
                     }
                 } else {
@@ -289,11 +526,11 @@ public class MainActivity extends AppCompatActivity
                 return producersFragment;
             case 2:
                 // favorites
-                FavoritesFragment favoritesFragment = new FavoritesFragment();
+                FavoritesFragment favoritesFragment = new FavoritesFragment(MainActivity.this);
                 return favoritesFragment;
             case 3:
                 // library
-                LibraryFragment libraryFragment = new LibraryFragment();
+                LibraryFragment libraryFragment = new LibraryFragment(MainActivity.this);
                 return libraryFragment;
 
             case 4:
@@ -393,12 +630,13 @@ public class MainActivity extends AppCompatActivity
         // Handle action bar item clicks here. The action bar will
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
-//        int id = item.getItemId();
+        int id = item.getItemId();
 //
-//        //noinspection SimplifiableIfStatement
-//        if (id == R.id.action_search) {
-//            return true;
-//        }
+        //noinspection SimplifiableIfStatement
+        if (id == R.id.action_restore) {
+            Toast.makeText(this, "Purchases have been restored", Toast.LENGTH_SHORT).show();
+            return true;
+        }
 
         return super.onOptionsItemSelected(item);
     }
@@ -431,6 +669,22 @@ public class MainActivity extends AppCompatActivity
 
         loadHomeFragment(false);
         return true;
+    }
+
+    private void createNotificationChannel() {
+        // Create the NotificationChannel, but only on API 26+ because
+        // the NotificationChannel class is new and not in the support library
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            CharSequence name = getString(R.string.app_name);
+            String description = getString(R.string.channel_description);
+            int importance = NotificationManager.IMPORTANCE_LOW;
+            NotificationChannel channel = new NotificationChannel(CHANNEL_ID, name, importance);
+            channel.setDescription(description);
+            // Register the channel with the system; you can't change the importance
+            // or other notification behaviors after this
+            NotificationManager notificationManager = getSystemService(NotificationManager.class);
+            notificationManager.createNotificationChannel(channel);
+        }
     }
 
     // show or hide the fab

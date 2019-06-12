@@ -1,7 +1,6 @@
 package com.makehitmusic.hiphopbeats.fragment;
 
 import android.content.Context;
-import android.content.Intent;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
@@ -9,7 +8,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentTransaction;
 import android.support.v7.widget.SearchView;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -20,28 +18,18 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
-import android.widget.CompoundButton;
-import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
-import android.widget.Switch;
 import android.widget.TextView;
 
 import com.makehitmusic.hiphopbeats.R;
-import com.makehitmusic.hiphopbeats.adapter.BeatsAdapter;
-import com.makehitmusic.hiphopbeats.adapter.PlayerAdapter;
 import com.makehitmusic.hiphopbeats.adapter.ProducersAdapter;
-import com.makehitmusic.hiphopbeats.model.BeatsObject;
 import com.makehitmusic.hiphopbeats.model.CategoryResponse;
 import com.makehitmusic.hiphopbeats.model.ProducersObject;
-import com.makehitmusic.hiphopbeats.presenter.MediaPlayerHolder;
-import com.makehitmusic.hiphopbeats.presenter.PlaybackInfoListener;
 import com.makehitmusic.hiphopbeats.rest.ApiClient;
 import com.makehitmusic.hiphopbeats.rest.ApiInterface;
-import com.makehitmusic.hiphopbeats.utils.FragmentUtil;
-import com.makehitmusic.hiphopbeats.view.BeatsActivity;
 import com.makehitmusic.hiphopbeats.view.MainActivity;
 
 import java.util.ArrayList;
@@ -49,8 +37,6 @@ import java.util.ArrayList;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
-
-import static com.makehitmusic.hiphopbeats.view.MainActivity.CURRENT_TAG;
 
 /**
  * A simple {@link Fragment} subclass.

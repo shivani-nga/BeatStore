@@ -7,16 +7,17 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Environment;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.FileProvider;
 import android.support.v7.widget.SearchView;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -25,12 +26,9 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.CompoundButton;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.ListView;
-import android.widget.PopupMenu;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.Switch;
@@ -39,11 +37,8 @@ import android.widget.Toast;
 
 import com.makehitmusic.hiphopbeats.R;
 import com.makehitmusic.hiphopbeats.adapter.BeatsAdapter;
-import com.makehitmusic.hiphopbeats.adapter.PlayerAdapter;
 import com.makehitmusic.hiphopbeats.model.BeatsObject;
 import com.makehitmusic.hiphopbeats.model.CategoryResponse;
-import com.makehitmusic.hiphopbeats.presenter.MediaPlayerHolder;
-import com.makehitmusic.hiphopbeats.presenter.PlaybackInfoListener;
 import com.makehitmusic.hiphopbeats.rest.ApiClient;
 import com.makehitmusic.hiphopbeats.rest.ApiInterface;
 import com.makehitmusic.hiphopbeats.view.MainActivity;
@@ -58,8 +53,6 @@ import retrofit2.Response;
 import static android.content.Context.DOWNLOAD_SERVICE;
 import static android.os.Environment.DIRECTORY_MUSIC;
 import static android.os.Environment.getExternalStoragePublicDirectory;
-import static com.facebook.FacebookSdk.getApplicationContext;
-import static java.security.AccessController.getContext;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -93,7 +86,7 @@ public class LibraryFragment extends Fragment implements SearchView.OnQueryTextL
     private final int FAVORITES_TAB = 3;
     private final int LIBRARY_TAB = 4;
 
-    private PlayerAdapter mPlayerAdapter;
+//    private PlayerAdapter mPlayerAdapter;
 
     public int categoryId;
     ArrayList<BeatsObject> beatsList;
@@ -119,14 +112,23 @@ public class LibraryFragment extends Fragment implements SearchView.OnQueryTextL
 
     private Context mContext;
 
+    private BeatsAdapter mAdapter;
+
     SearchView searchView;
 
     Switch switchView;
+
+    public MainActivity mActivity;
 
     private boolean searchByBeats = true;
     private String searchedText = "";
 
     public LibraryFragment() {
+        // Required empty public constructor
+    }
+
+    public LibraryFragment(MainActivity activity) {
+        mActivity = activity;
         // Required empty public constructor
     }
 
@@ -222,45 +224,66 @@ public class LibraryFragment extends Fragment implements SearchView.OnQueryTextL
 //        View emptyView = rootView.findViewById(R.id.empty_view);
 //        producersListView.setEmptyView(emptyView);
 
-        ApiInterface apiService = ApiClient.getClient().create(ApiInterface.class);
+        SharedPreferences sharedPref = getActivity().getSharedPreferences(
+                getString(R.string.preference_login), Context.MODE_PRIVATE);
+        int loginTypeInt = sharedPref.getInt("LoginType", 0);
+        int userCode = sharedPref.getInt("UserCode", 0);
+        int userId = sharedPref.getInt("UserId", 0);
+        Log.d("UserID", String.valueOf(userId));
 
-        Call<CategoryResponse> call = apiService.getBeatsDetails("true", "true");
-        call.enqueue(new Callback<CategoryResponse>() {
-            @Override
-            public void onResponse(Call<CategoryResponse> call, Response<CategoryResponse> response) {
-                progressBar.setVisibility(View.GONE);
-                int statusCode = response.code();
-                beatsList = response.body().getBeatsResults();
+        if (loginTypeInt != 0 && userCode != 0 && userId != 0) {
+            ApiInterface apiService = ApiClient.getClient().create(ApiInterface.class);
 
-                if (beatsList.isEmpty()) {
+            Call<CategoryResponse> call = apiService.getBeatsDetails("true", "true");
+            call.enqueue(new Callback<CategoryResponse>() {
+                @Override
+                public void onResponse(Call<CategoryResponse> call, Response<CategoryResponse> response) {
+                    progressBar.setVisibility(View.GONE);
+                    int statusCode = response.code();
+                    beatsList = response.body().getBeatsResults();
+
+                    if (beatsList.isEmpty()) {
+                        emptyView.setVisibility(View.VISIBLE);
+                        emptyImage.setVisibility(View.VISIBLE);
+                        emptyText.setVisibility(View.VISIBLE);
+                        emptyImage.setImageResource(R.drawable.empty_view);
+                        emptyText.setText(R.string.empty_view_text);
+                    } else {
+                        emptyView.setVisibility(View.GONE);
+                        emptyImage.setVisibility(View.GONE);
+                        emptyText.setVisibility(View.GONE);
+                    }
+                    beatsListView.setAdapter(new BeatsAdapter(getActivity(), beatsList, 1));
+                }
+
+                @Override
+                public void onFailure(Call<CategoryResponse> call, Throwable t) {
+                    // Log error here since request failed
+                    Log.e(LOG_TAG, t.toString());
+
+                    progressBar.setVisibility(View.GONE);
                     emptyView.setVisibility(View.VISIBLE);
                     emptyImage.setVisibility(View.VISIBLE);
                     emptyText.setVisibility(View.VISIBLE);
-                    emptyImage.setImageResource(R.drawable.empty_view);
-                    emptyText.setText(R.string.empty_view_text);
-                } else {
-                    emptyView.setVisibility(View.GONE);
-                    emptyImage.setVisibility(View.GONE);
-                    emptyText.setVisibility(View.GONE);
+                    emptyImage.setImageResource(R.drawable.no_internet);
+                    emptyText.setText(R.string.no_internet);
                 }
-                beatsListView.setAdapter(new BeatsAdapter(getActivity(), beatsList, 1));
-            }
+            });
+        } else {
+            beatsList = null;
+            progressBar.setVisibility(View.GONE);
+            emptyView.setVisibility(View.VISIBLE);
+            emptyImage.setVisibility(View.VISIBLE);
+            emptyText.setVisibility(View.VISIBLE);
+            emptyImage.setImageResource(R.drawable.empty_view);
+            String message = getString(R.string.empty_view_text) + "\n" + getString(R.string.empty_view_text_head);
+            emptyText.setGravity(Gravity.CENTER_HORIZONTAL);
+            emptyText.setText(message);
 
-            @Override
-            public void onFailure(Call<CategoryResponse> call, Throwable t) {
-                // Log error here since request failed
-                Log.e(LOG_TAG, t.toString());
+            beatsListView.setAdapter(null);
+        }
 
-                progressBar.setVisibility(View.GONE);
-                emptyView.setVisibility(View.VISIBLE);
-                emptyImage.setVisibility(View.VISIBLE);
-                emptyText.setVisibility(View.VISIBLE);
-                emptyImage.setImageResource(R.drawable.no_internet);
-                emptyText.setText(R.string.no_internet);
-            }
-        });
-
-        initializePlaybackController();
+//        initializePlaybackController();
 
         // Setup the item click listener
         beatsListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -277,7 +300,10 @@ public class LibraryFragment extends Fragment implements SearchView.OnQueryTextL
                 } else {
                     //Toast.makeText(mContext, "ListView clicked" + id, Toast.LENGTH_SHORT).show();
 
-                    mPlayerAdapter.playFromList(beatsObject.getItemSamplePath());
+                    ArrayList<BeatsObject> playingQueue = new ArrayList<BeatsObject>(beatsList.subList(position, beatsList.size()));
+                    mActivity.playAudio(playingQueue);
+
+//                    mPlayerAdapter.playFromList(beatsObject.getItemSamplePath());
                     //mMainActivity.changeMusicContent(beatsObject.getItemName(), beatsObject.getItemImageBig(),
                     //beatsObject.getProducerName(), beatsObject.getIsLiked(), beatsObject.getItemPrice());
                 }
@@ -290,31 +316,33 @@ public class LibraryFragment extends Fragment implements SearchView.OnQueryTextL
     public void openPopupMenu(BeatsObject currentBeat, View v) {
 
         final BeatsObject clickedBeat = currentBeat;
-        //creating a popup menu
-        PopupMenu popup = new PopupMenu(mContext, v);
-        //inflating menu from xml resource
-        MenuInflater inflater = popup.getMenuInflater();
-        inflater.inflate(R.menu.library_menu, popup.getMenu());
-        //displaying the popup
-        popup.show();
         beatHolder = clickedBeat;
-        //adding click listener
-        popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
-            @Override
-            public boolean onMenuItemClick(MenuItem item) {
-                switch (item.getItemId()) {
-                    case R.id.email_option:
-                        //handle email click
-                        checkReadPermission();
-                        break;
-                    case R.id.drive_option:
-                        //handle drive click
-                        checkReadPermission();
-                        break;
-                }
-                return false;
-            }
-        });
+        checkReadPermission();
+//        //creating a popup menu
+//        PopupMenu popup = new PopupMenu(mContext, v);
+//        //inflating menu from xml resource
+//        MenuInflater inflater = popup.getMenuInflater();
+//        inflater.inflate(R.menu.library_menu, popup.getMenu());
+//        //displaying the popup
+//        popup.show();
+//        beatHolder = clickedBeat;
+//        //adding click listener
+//        popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+//            @Override
+//            public boolean onMenuItemClick(MenuItem item) {
+//                switch (item.getItemId()) {
+//                    case R.id.email_option:
+//                        //handle email click
+//                        checkReadPermission();
+//                        break;
+//                    case R.id.drive_option:
+//                        //handle drive click
+//                        checkReadPermission();
+//                        break;
+//                }
+//                return false;
+//            }
+//        });
 
     }
 
@@ -338,6 +366,7 @@ public class LibraryFragment extends Fragment implements SearchView.OnQueryTextL
                 File filePath = new File(getExternalStoragePublicDirectory(DIRECTORY_MUSIC)
                         + "/" + file);
                 Log.d("FileExists", String.valueOf(filePath.exists()));
+                fileHolder = filePath;
 
                 if (!filePath.exists()) {
                     DownloadManager dm = (DownloadManager) mContext.getSystemService(DOWNLOAD_SERVICE);
@@ -445,6 +474,7 @@ public class LibraryFragment extends Fragment implements SearchView.OnQueryTextL
         Intent emailIntent = new Intent(Intent.ACTION_SEND);
         emailIntent.setData(Uri.parse("mailto:")); // only email apps should handle this
         emailIntent.setType("message/rfc822");
+        //emailIntent.setDataAndType(Uri.parse("mailto:"), "message/rfc822");
         //emailIntent.putExtra(android.content.Intent.EXTRA_EMAIL, new String[]{"xxx@xxx.xxx"});
         emailIntent.putExtra(Intent.EXTRA_TEXT, "Sent from my Android Device.");
         emailIntent.putExtra(android.content.Intent.EXTRA_SUBJECT,
@@ -456,39 +486,39 @@ public class LibraryFragment extends Fragment implements SearchView.OnQueryTextL
         mContext.startActivity(Intent.createChooser(emailIntent, "Send Beat"));
     }
 
-    private void initializePlaybackController() {
-        MediaPlayerHolder mMediaPlayerHolder = new MediaPlayerHolder(getActivity());
-        Log.d(LOG_TAG, "initializePlaybackController: created MediaPlayerHolder");
-        mMediaPlayerHolder.setPlaybackInfoListener(new LibraryFragment.PlaybackListener());
-        mPlayerAdapter = mMediaPlayerHolder;
-        Log.d(LOG_TAG, "initializePlaybackController: MediaPlayerHolder progress callback set");
-    }
-
-    public class PlaybackListener extends PlaybackInfoListener {
-
-        @Override
-        public void onDurationChanged(int duration) {
-            Log.d(LOG_TAG, String.format("setPlaybackDuration: setMax(%d)", duration));
-        }
-
-        @Override
-        public void onPositionChanged(int position) {
-            Log.d(LOG_TAG, String.format("setPlaybackPosition: setProgress(%d)", position));
-        }
-
-        @Override
-        public void onStateChanged(@State int state) {
-        }
-
-        @Override
-        public void onPlaybackCompleted() {
-        }
-
-        @Override
-        public void onLogUpdated(String message) {
-
-        }
-    }
+//    private void initializePlaybackController() {
+//        MediaPlayerHolder mMediaPlayerHolder = new MediaPlayerHolder(getActivity());
+//        Log.d(LOG_TAG, "initializePlaybackController: created MediaPlayerHolder");
+//        mMediaPlayerHolder.setPlaybackInfoListener(new LibraryFragment.PlaybackListener());
+//        mPlayerAdapter = mMediaPlayerHolder;
+//        Log.d(LOG_TAG, "initializePlaybackController: MediaPlayerHolder progress callback set");
+//    }
+//
+//    public class PlaybackListener extends PlaybackInfoListener {
+//
+//        @Override
+//        public void onDurationChanged(int duration) {
+//            Log.d(LOG_TAG, String.format("setPlaybackDuration: setMax(%d)", duration));
+//        }
+//
+//        @Override
+//        public void onPositionChanged(int position) {
+//            Log.d(LOG_TAG, String.format("setPlaybackPosition: setProgress(%d)", position));
+//        }
+//
+//        @Override
+//        public void onStateChanged(@State int state) {
+//        }
+//
+//        @Override
+//        public void onPlaybackCompleted() {
+//        }
+//
+//        @Override
+//        public void onLogUpdated(String message) {
+//
+//        }
+//    }
 
     // TODO: Rename method, update argument and hook method into UI event
     public void onButtonPressed(Uri uri) {
