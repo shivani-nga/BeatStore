@@ -200,6 +200,12 @@ public class LoginScreen extends Activity implements
         mGoogleSignInClient = GoogleSignIn.getClient(this, gso);
     }
 
+    @Override
+    protected void onStart() {
+        super.onStart();
+        revokeAccess();
+    }
+
     private void getUserProfile(final AccessToken currentAccessToken) {
         GraphRequest request = GraphRequest.newMeRequest(
                 currentAccessToken,
@@ -416,21 +422,21 @@ public class LoginScreen extends Activity implements
         return outputString;
     }
 
-    private void signOut() {
-        mGoogleSignInClient.signOut().addOnCompleteListener(this, new OnCompleteListener<Void>() {
-            @Override
-            public void onComplete(@NonNull Task<Void> task) {
-                updateUI(null);
-            }
-        });
-    }
-
     private void revokeAccess() {
-        mGoogleSignInClient.revokeAccess().addOnCompleteListener(this,
-                new OnCompleteListener<Void>() {
+        mGoogleSignInClient.revokeAccess()
+                .addOnCompleteListener(this, new OnCompleteListener<Void>() {
                     @Override
                     public void onComplete(@NonNull Task<Void> task) {
-                        updateUI(null);
+                        signOut();
+                    }
+                });
+    }
+
+    public void signOut() {
+        mGoogleSignInClient.signOut()
+                .addOnCompleteListener(this, new OnCompleteListener<Void>() {
+                    @Override
+                    public void onComplete(@NonNull Task<Void> task) {
                     }
                 });
     }

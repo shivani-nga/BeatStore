@@ -7,7 +7,9 @@ import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.database.Cursor;
+import android.media.AudioManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -35,6 +37,8 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.request.RequestOptions;
 import com.makehitmusic.hiphopbeats.R;
 import com.makehitmusic.hiphopbeats.fragment.BeatsFragment;
 import com.makehitmusic.hiphopbeats.fragment.ProducersFragment;
@@ -43,13 +47,23 @@ import com.makehitmusic.hiphopbeats.fragment.FavoritesFragment;
 import com.makehitmusic.hiphopbeats.fragment.LibraryFragment;
 import com.makehitmusic.hiphopbeats.fragment.MoreFragment;
 import com.makehitmusic.hiphopbeats.model.BeatsObject;
+import com.makehitmusic.hiphopbeats.model.FavouriteRequest;
+import com.makehitmusic.hiphopbeats.model.FavouriteResponse;
+import com.makehitmusic.hiphopbeats.rest.ApiClient;
+import com.makehitmusic.hiphopbeats.rest.ApiInterface;
 import com.makehitmusic.hiphopbeats.utils.MediaPlayerService;
 import com.makehitmusic.hiphopbeats.utils.StorageUtil;
 import com.sothree.slidinguppanel.SlidingUpPanelLayout;
 
 import java.util.ArrayList;
 
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+
+import static com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions.withCrossFade;
 import static com.makehitmusic.hiphopbeats.utils.MediaPlayerService.CHANNEL_ID;
+import static com.makehitmusic.hiphopbeats.utils.Url.BASE_URL;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener,
@@ -122,6 +136,10 @@ public class MainActivity extends AppCompatActivity
 
     public boolean isBeatsFragment = false;
 
+    public boolean isPlaying = false;
+    public BeatsObject currentBeat;
+    private AudioManager audioManager = null;
+
     public static Bundle beatsData;
     public static int position;
     public static int tabPosition;
@@ -134,6 +152,10 @@ public class MainActivity extends AppCompatActivity
 
     // Change to your package name
     public static final String Broadcast_PLAY_NEW_AUDIO = "com.makehitmusic.hiphopbeats.PlayNewAudio";
+    public static final String Broadcast_PLAY_AUDIO = "com.makehitmusic.hiphopbeats.PlayAudio";
+    public static final String Broadcast_PAUSE_AUDIO = "com.makehitmusic.hiphopbeats.PauseAudio";
+    public static final String Broadcast_PLAY_NEXT_AUDIO = "com.makehitmusic.hiphopbeats.PlayNextAudio";
+    public static final String Broadcast_PLAY_PREVIOUS_AUDIO = "com.makehitmusic.hiphopbeats.PlayPreviousAudio";
 
     //Binding this Client to the AudioPlayer Service
     private ServiceConnection serviceConnection = new ServiceConnection() {
@@ -157,6 +179,7 @@ public class MainActivity extends AppCompatActivity
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        setVolumeControlStream(AudioManager.STREAM_MUSIC);
 
         createNotificationChannel();
 
@@ -279,6 +302,13 @@ public class MainActivity extends AppCompatActivity
 //    }
 
     private void initializeUI() {
+
+        final SharedPreferences sharedPref = this.getSharedPreferences(
+                getString(R.string.preference_login), Context.MODE_PRIVATE);
+        int loginTypeInt = sharedPref.getInt("LoginType", 0);
+        int userCode = sharedPref.getInt("UserCode", 0);
+        final int userId = sharedPref.getInt("UserId", 0);
+
         mBeatCover = (ImageView) findViewById(R.id.current_beat_cover);
         mBeatName = (TextView) findViewById(R.id.current_beat_name);
         mProducerName = (TextView) findViewById(R.id.current_producer_name);
@@ -299,20 +329,218 @@ public class MainActivity extends AppCompatActivity
         mPlayButtonBig = (ImageView) findViewById(R.id.play_button);
         mNextButtonBig = (ImageView) findViewById(R.id.next_button);
 
+        try {
+            audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+            mVolumeSeekbar.setMax(audioManager
+                    .getStreamMaxVolume(AudioManager.STREAM_MUSIC));
+            mVolumeSeekbar.setProgress(audioManager
+                    .getStreamVolume(AudioManager.STREAM_MUSIC));
+
+            mVolumeSeekbar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener()
+            {
+                @Override
+                public void onStopTrackingTouch(SeekBar arg0)
+                {
+                }
+
+                @Override
+                public void onStartTrackingTouch(SeekBar arg0)
+                {
+                }
+
+                @Override
+                public void onProgressChanged(SeekBar arg0, int progress, boolean arg2)
+                {
+                    audioManager.setStreamVolume(AudioManager.STREAM_MUSIC,
+                            progress, 0);
+                }
+            });
+        } catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+
         mPlayButton.setOnClickListener(
                 new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
-//                      mPlayerAdapter.play();
+                        if (serviceBound) {
+                            if (isPlaying) {
+                                mPlayButton.setImageResource(R.drawable.round_play_arrow_white_36);
+                                mPlayButtonBig.setImageResource(R.drawable.round_play_arrow_white_48);
+                                isPlaying = false;
+
+                                //Send a broadcast to the service -> PLAY_PAUSE_AUDIO
+                                Intent broadcastIntent = new Intent(Broadcast_PAUSE_AUDIO);
+                                sendBroadcast(broadcastIntent);
+                            } else {
+                                mPlayButton.setImageResource(R.drawable.round_pause_white_36);
+                                mPlayButtonBig.setImageResource(R.drawable.round_pause_white_48);
+                                isPlaying = true;
+
+                                //Send a broadcast to the service -> PLAY_PAUSE_AUDIO
+                                Intent broadcastIntent = new Intent(Broadcast_PLAY_AUDIO);
+                                sendBroadcast(broadcastIntent);
+                            }
+                        }
+                    }
+                });
+        mPlayButtonBig.setOnClickListener(
+                new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        if (serviceBound) {
+                            if (isPlaying) {
+                                mPlayButton.setImageResource(R.drawable.round_play_arrow_white_36);
+                                mPlayButtonBig.setImageResource(R.drawable.round_play_arrow_white_48);
+                                isPlaying = false;
+
+                                //Send a broadcast to the service -> PLAY_PAUSE_AUDIO
+                                Intent broadcastIntent = new Intent(Broadcast_PAUSE_AUDIO);
+                                sendBroadcast(broadcastIntent);
+                            } else {
+                                mPlayButton.setImageResource(R.drawable.round_pause_white_36);
+                                mPlayButtonBig.setImageResource(R.drawable.round_pause_white_48);
+                                isPlaying = true;
+
+                                //Send a broadcast to the service -> PLAY_PAUSE_AUDIO
+                                Intent broadcastIntent = new Intent(Broadcast_PLAY_AUDIO);
+                                sendBroadcast(broadcastIntent);
+                            }
+                        }
                     }
                 });
         mNextButton.setOnClickListener(
                 new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
-//                      mPlayerAdapter.reset();
+                        //Send a broadcast to the service -> PLAY_NEXT_AUDIO
+                        Intent broadcastIntent = new Intent(Broadcast_PLAY_NEXT_AUDIO);
+                        sendBroadcast(broadcastIntent);
                     }
                 });
+        mNextButtonBig.setOnClickListener(
+                new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        //Send a broadcast to the service -> PLAY_NEXT_AUDIO
+                        Intent broadcastIntent = new Intent(Broadcast_PLAY_NEXT_AUDIO);
+                        sendBroadcast(broadcastIntent);
+                    }
+                });
+        mPreviousButtonBig.setOnClickListener(
+                new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        //Send a broadcast to the service -> PLAY_NEXT_AUDIO
+                        Intent broadcastIntent = new Intent(Broadcast_PLAY_PREVIOUS_AUDIO);
+                        sendBroadcast(broadcastIntent);
+                    }
+                });
+
+        mFavourite.setOnClickListener(
+                new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+
+                        ApiInterface apiService = ApiClient.getClient().create(ApiInterface.class);
+                        FavouriteRequest favouriteRequest = null;
+
+                        if (userId == 0) {
+                            Toast.makeText(MainActivity.this, "Oops, you need to sign in to do that", Toast.LENGTH_SHORT).show();
+                            SharedPreferences.Editor editor = sharedPref.edit();
+                            editor.putInt("LoginType", 0);
+                            editor.putInt("UserCode", 0);
+                            editor.putInt("UserId", 0);
+                            editor.apply();
+
+                            // Take the user to Login Screen
+                            Intent i = new Intent(MainActivity.this, LoginScreen.class);
+                            startActivity(i);
+                            //Toast.makeText(getActivity(), "Signed Out: Successfully", Toast.LENGTH_SHORT).show();
+
+                            finish();
+                        } else {
+                            if ("false".equals(currentBeat.getIsLiked())) {
+                                favouriteRequest = new FavouriteRequest(String.valueOf(currentBeat.getItemId()), String.valueOf(userId), true);
+                            } else if ("true".equals(currentBeat.getIsLiked())) {
+                                favouriteRequest = new FavouriteRequest(String.valueOf(currentBeat.getItemId()), String.valueOf(userId), false);
+                            }
+
+                            Call<FavouriteResponse> call = apiService.postFavoiritingBeat(favouriteRequest);
+                            call.enqueue(new Callback<FavouriteResponse>() {
+                                @Override
+                                public void onResponse(Call<FavouriteResponse> call, Response<FavouriteResponse> response) {
+                                    int statusCode = response.code();
+                                    final String message = response.body().getMessage();
+
+                                    Log.d("Message", message);
+                                    if (message.equals("Successfully Added")) {
+                                        currentBeat.setIsLiked(true);
+                                        mFavourite.setImageDrawable(getResources().getDrawable(R.drawable.favorite_24));
+                                    }
+                                    else if (message.equals("Successfully Removed")) {
+                                        currentBeat.setIsLiked(false);
+                                        mFavourite.setImageDrawable(getResources().getDrawable(R.drawable.favorite_border_24));
+                                    }
+                                }
+
+                                @Override
+                                public void onFailure(Call<FavouriteResponse> call, Throwable t) {
+                                    // Log error here since request failed
+                                    Log.e(TAG, t.toString());
+                                }
+                            });
+
+                        }
+                    }
+                });
+    }
+
+    private void initializeNowPlaying() {
+        mPlayButton.setImageResource(R.drawable.round_pause_white_36);
+        mPlayButtonBig.setImageResource(R.drawable.round_pause_white_48);
+        mBeatName.setText(currentBeat.getItemName());
+        mProducerName.setText(currentBeat.getProducerName());
+        mBeatNameBig.setText(currentBeat.getItemName());
+        mProducerNameBig.setText(currentBeat.getProducerName());
+
+        if (!(currentBeat.getItemImageBig().equals(BASE_URL))) {
+            Glide.with(this).load(currentBeat.getItemImageBig())
+                    //.placeholder(R.drawable.twotone_library_music_24)
+                    .apply(new RequestOptions().placeholder(R.drawable.highlight_color).error(R.drawable.highlight_color))
+                    .transition(withCrossFade()).into(mBeatCover);
+
+            Glide.with(this).load(currentBeat.getItemImageBig())
+                    //.placeholder(R.drawable.twotone_library_music_24)
+                    .apply(new RequestOptions().placeholder(R.drawable.highlight_color).error(R.drawable.highlight_color))
+                    .transition(withCrossFade()).into(mBeatCoverBig);
+        }
+        else if (!(currentBeat.getItemImageSmall().equals(BASE_URL))) {
+            Glide.with(this).load(currentBeat.getItemImageSmall())
+                    //.placeholder(R.drawable.twotone_library_music_24)
+                    .apply(new RequestOptions().placeholder(R.drawable.highlight_color).error(R.drawable.highlight_color))
+                    .transition(withCrossFade()).into(mBeatCover);
+
+            Glide.with(this).load(currentBeat.getItemImageSmall())
+                    //.placeholder(R.drawable.twotone_library_music_24)
+                    .apply(new RequestOptions().placeholder(R.drawable.highlight_color).error(R.drawable.highlight_color))
+                    .transition(withCrossFade()).into(mBeatCoverBig);
+        }
+        else if (!(currentBeat.getProducerImage().equals(BASE_URL))) {
+            Glide.with(this).load(currentBeat.getProducerImage())
+                    //.placeholder(R.drawable.twotone_library_music_24)
+                    .apply(new RequestOptions().placeholder(R.drawable.highlight_color).error(R.drawable.highlight_color))
+                    .transition(withCrossFade()).into(mBeatCover);
+
+            Glide.with(this).load(currentBeat.getProducerImage())
+                    //.placeholder(R.drawable.twotone_library_music_24)
+                    .apply(new RequestOptions().placeholder(R.drawable.highlight_color).error(R.drawable.highlight_color))
+                    .transition(withCrossFade()).into(mBeatCoverBig);
+        }
+        else {
+            mBeatCover.setImageDrawable(this.getResources().getDrawable(R.drawable.default_cover));
+        }
     }
 
     private void initializeSeekbar() {
@@ -348,7 +576,6 @@ public class MainActivity extends AppCompatActivity
             storage.storeAudio(audioList);
             storage.storeAudioIndex(0);
 
-
             Intent playerIntent = new Intent(this, MediaPlayerService.class);
             startService(playerIntent);
             bindService(playerIntent, serviceConnection, Context.BIND_AUTO_CREATE);
@@ -363,6 +590,9 @@ public class MainActivity extends AppCompatActivity
             Intent broadcastIntent = new Intent(Broadcast_PLAY_NEW_AUDIO);
             sendBroadcast(broadcastIntent);
         }
+        isPlaying = true;
+        currentBeat = audioList.get(0);
+        initializeNowPlaying();
     }
 
     @Override

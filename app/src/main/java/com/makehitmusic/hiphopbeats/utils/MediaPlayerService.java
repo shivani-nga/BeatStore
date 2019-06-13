@@ -119,6 +119,46 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
         }
     };
 
+    private BroadcastReceiver playAudio = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+
+            Log.d("Context", context.toString());
+            resumeMedia();
+            buildNotification(PlaybackStatus.PLAYING);
+        }
+    };
+
+    private BroadcastReceiver pauseAudio = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+
+            Log.d("Context", context.toString());
+            pauseMedia();
+            buildNotification(PlaybackStatus.PAUSED);
+        }
+    };
+
+    private BroadcastReceiver playNextAudio = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+
+            Log.d("Context", context.toString());
+            skipToNext();
+            buildNotification(PlaybackStatus.PLAYING);
+        }
+    };
+
+    private BroadcastReceiver playPreviousAudio = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+
+            Log.d("Context", context.toString());
+            skipToPrevious();
+            buildNotification(PlaybackStatus.PLAYING);
+        }
+    };
+
     @Override
     public IBinder onBind(Intent intent) {
         return iBinder;
@@ -143,6 +183,10 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
         registerBecomingNoisyReceiver();
         //Listen for new Audio to play -- BroadcastReceiver
         register_playNewAudio();
+        register_playAudio();
+        register_pauseAudio();
+        register_playNextAudio();
+        register_playPreviousAudio();
     }
 
     @Override
@@ -281,6 +325,13 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
     }
 
     @Override
+    public boolean onUnbind(Intent intent) {
+        mediaSession.release();
+        removeNotification();
+        return super.onUnbind(intent);
+    }
+
+    @Override
     public void onDestroy() {
         super.onDestroy();
         if (mediaPlayer != null) {
@@ -298,6 +349,10 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
         //unregister BroadcastReceivers
         unregisterReceiver(becomingNoisyReceiver);
         unregisterReceiver(playNewAudio);
+        unregisterReceiver(playAudio);
+        unregisterReceiver(pauseAudio);
+        unregisterReceiver(playNextAudio);
+        unregisterReceiver(playPreviousAudio);
 
         //clear cached playlist
         new StorageUtil(getApplicationContext()).clearCachedAudioPlaylist();
@@ -313,6 +368,30 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
         //Register playNewMedia receiver
         IntentFilter filter = new IntentFilter(MainActivity.Broadcast_PLAY_NEW_AUDIO);
         registerReceiver(playNewAudio, filter);
+    }
+
+    private void register_playAudio() {
+        //Register playMedia receiver
+        IntentFilter filter = new IntentFilter(MainActivity.Broadcast_PLAY_AUDIO);
+        registerReceiver(playAudio, filter);
+    }
+
+    private void register_pauseAudio() {
+        //Register pauseMedia receiver
+        IntentFilter filter = new IntentFilter(MainActivity.Broadcast_PAUSE_AUDIO);
+        registerReceiver(pauseAudio, filter);
+    }
+
+    private void register_playNextAudio() {
+        //Register playNextMedia receiver
+        IntentFilter filter = new IntentFilter(MainActivity.Broadcast_PLAY_NEXT_AUDIO);
+        registerReceiver(playNextAudio, filter);
+    }
+
+    private void register_playPreviousAudio() {
+        //Register playPreviousMedia receiver
+        IntentFilter filter = new IntentFilter(MainActivity.Broadcast_PLAY_PREVIOUS_AUDIO);
+        registerReceiver(playPreviousAudio, filter);
     }
 
     //Handle incoming phone calls
