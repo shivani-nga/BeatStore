@@ -95,6 +95,8 @@ public class LibraryFragment extends Fragment implements SearchView.OnQueryTextL
 
     ProgressBar progressBar;
 
+    private int positionData;
+
     RelativeLayout emptyView;
     ImageView emptyImage;
     TextView emptyText;
@@ -290,6 +292,7 @@ public class LibraryFragment extends Fragment implements SearchView.OnQueryTextL
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int position, long id) {
                 long viewId = view.getId();
+                positionData = position;
 
                 // Find the beat at the given position in the list of beats
                 BeatsObject beatsObject = beatsList.get(position);
@@ -297,6 +300,16 @@ public class LibraryFragment extends Fragment implements SearchView.OnQueryTextL
                 if (viewId == R.id.options) {
                     //Toast.makeText(mContext, "Options clicked", Toast.LENGTH_SHORT).show();
                     openPopupMenu(beatsObject, view);
+                } else if (viewId == R.id.producer_name) {
+                    Bundle arguments = new Bundle();
+                    arguments.putInt("position", positionData);
+                    arguments.putInt("tab_position", 5);
+                    arguments.putInt("producer_id", beatsObject.getProducerId());
+                    arguments.putString("producer_name", beatsObject.getProducerName());
+                    arguments.putString("producer_description", beatsObject.getProducerDescription());
+                    arguments.putString("producer_image", beatsObject.getProducerImage());
+
+                    mActivity.loadBeatsFragment(arguments);
                 } else {
                     //Toast.makeText(mContext, "ListView clicked" + id, Toast.LENGTH_SHORT).show();
 

@@ -156,7 +156,8 @@ public class LoginScreen extends Activity implements
                 loginTypeInt = 2;
                 View loadingIndicator = findViewById(R.id.loading_indicator);
                 loadingIndicator.setVisibility(View.VISIBLE);
-                LoginManager.getInstance().logInWithReadPermissions(LoginScreen.this, Arrays.asList(EMAIL, PUBLIC_PROFILE, USER_BIRTHDAY, USER_PHOTOS, USER_LOCATION));
+                //LoginManager.getInstance().logInWithReadPermissions(LoginScreen.this, Arrays.asList(EMAIL, PUBLIC_PROFILE, USER_BIRTHDAY, USER_PHOTOS, USER_LOCATION));
+                LoginManager.getInstance().logInWithReadPermissions(LoginScreen.this, Arrays.asList(EMAIL, PUBLIC_PROFILE));
             }
         });
 

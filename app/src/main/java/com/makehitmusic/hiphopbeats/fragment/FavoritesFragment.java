@@ -96,6 +96,8 @@ public class FavoritesFragment extends Fragment implements SearchView.OnQueryTex
 
     Switch switchView;
 
+    private int positionData;
+
     public MainActivity mActivity;
 
     private boolean searchByBeats = true;
@@ -237,6 +239,8 @@ public class FavoritesFragment extends Fragment implements SearchView.OnQueryTex
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, final int position, long id) {
                 long viewId = view.getId();
+                positionData = position;
+
                 final View listItemView = view;
                 View parentRow = (View) listItemView.getParent();
                 LinearLayout rootView = (LinearLayout) parentRow.getParent();
@@ -322,6 +326,16 @@ public class FavoritesFragment extends Fragment implements SearchView.OnQueryTex
                     } else {
 
                     }
+                } else if (viewId == R.id.producer_name) {
+                    Bundle arguments = new Bundle();
+                    arguments.putInt("position", positionData);
+                    arguments.putInt("tab_position", 5);
+                    arguments.putInt("producer_id", beatsObject.getProducerId());
+                    arguments.putString("producer_name", beatsObject.getProducerName());
+                    arguments.putString("producer_description", beatsObject.getProducerDescription());
+                    arguments.putString("producer_image", beatsObject.getProducerImage());
+
+                    mActivity.loadBeatsFragment(arguments);
                 } else {
                     ArrayList<BeatsObject> playingQueue = new ArrayList<BeatsObject>(beatsList.subList(position, beatsList.size()));
                     mActivity.playAudio(playingQueue);

@@ -98,6 +98,22 @@ public class BeatsAdapter extends ArrayAdapter<BeatsObject> {
         // Display the producer_name of the current beat in that TextView
         producerName.setText(currentBeat.getProducerName());
 
+        producerName.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                View parentRow = (View) v.getParent();
+                LinearLayout rootView = (LinearLayout) parentRow.getParent();
+                ListView listView = (ListView) rootView.getParent();
+                final int position = listView.getPositionForView(rootView);
+                Log.d("Position", String.valueOf(position));
+
+                // Find the beat at the given position in the list of beats
+                final BeatsObject currentBeat = getItem(position);
+
+                (listView).performItemClick(v, position, 0);
+            }
+        });
+
         // Find the TextView with view ID duration
         TextView duration = (TextView) listItemView.findViewById(R.id.duration);
         // Display the duration of the current beat in that TextView
@@ -183,6 +199,7 @@ public class BeatsAdapter extends ArrayAdapter<BeatsObject> {
         }
 
         if (flag == 1) {
+
             optionButton = (TextView) listItemView.findViewById(R.id.options);
 
             optionButton.setOnClickListener(new View.OnClickListener() {

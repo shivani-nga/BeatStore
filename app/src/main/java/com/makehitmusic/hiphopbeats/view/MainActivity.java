@@ -694,7 +694,7 @@ public class MainActivity extends AppCompatActivity
                     if (tabPosition == 1) {
                         fragment = new BeatsFragment(MainActivity.this);
                         fragment.setArguments(beatsData);
-                    } else if (tabPosition == 2) {
+                    } else if (tabPosition == 2 || tabPosition == 5) {
                         fragment = new BeatsFragment(MainActivity.this);
                         fragment.setArguments(beatsData);
                     }
@@ -734,8 +734,13 @@ public class MainActivity extends AppCompatActivity
         if (tabPosition == 1) {
             categoryId = Integer.parseInt(parameters.getString("category_id"));
             categoryName = parameters.getString("category_name");
-        }else if (tabPosition == 2) {
+        } else if (tabPosition == 2) {
             producerId = Integer.parseInt(parameters.getString("producer_id"));
+            producerName = parameters.getString("producer_name");
+            producerDescription = parameters.getString("producer_description");
+            producerImage = parameters.getString("producer_image");
+        } else if (tabPosition == 5) {
+            producerId = parameters.getInt("producer_id");
             producerName = parameters.getString("producer_name");
             producerDescription = parameters.getString("producer_description");
             producerImage = parameters.getString("producer_image");
@@ -776,7 +781,7 @@ public class MainActivity extends AppCompatActivity
         if (isBeatsFragment) {
             if (tabPosition == 1) {
                 getSupportActionBar().setTitle(categoryName);
-            } else if (tabPosition == 2) {
+            } else if (tabPosition == 2 || tabPosition == 5) {
                 getSupportActionBar().setTitle(producerName);
             }
         } else {
@@ -809,7 +814,7 @@ public class MainActivity extends AppCompatActivity
             // rather than home
             if (navItemIndex != 0) {
                 if (isBeatsFragment) {
-                    if (tabPosition == 2) {
+                    if (tabPosition == 2 || tabPosition == 5) {
                         navItemIndex = 1;
                         CURRENT_TAG = TAG_BEAT_PRODUCERS;
                         loadHomeFragment(false);
@@ -829,7 +834,7 @@ public class MainActivity extends AppCompatActivity
                     return;
                 }
             } else if (navItemIndex == 0 && isBeatsFragment) {
-                if (tabPosition == 2) {
+                if (tabPosition == 2 || tabPosition == 5) {
                     navItemIndex = 1;
                     CURRENT_TAG = TAG_BEAT_PRODUCERS;
                     loadHomeFragment(false);

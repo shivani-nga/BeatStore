@@ -90,6 +90,8 @@ public class BeatsFragment extends Fragment implements SearchView.OnQueryTextLis
 
     public MainActivity mActivity;
 
+    private int positionData;
+
     ProgressBar progressBar;
 
     RelativeLayout emptyView;
@@ -151,8 +153,13 @@ public class BeatsFragment extends Fragment implements SearchView.OnQueryTextLis
         if (tab_position == 1) {
             categoryId = Integer.parseInt(arguments.getString("category_id"));
             categoryName = arguments.getString("category_name");
-        }else if (tab_position == 2) {
+        } else if (tab_position == 2) {
             producerId = Integer.parseInt(arguments.getString("producer_id"));
+            producerName = arguments.getString("producer_name");
+            producerDescription = arguments.getString("producer_description");
+            producerImage = arguments.getString("producer_image");
+        } else if (tab_position == 5) {
+            producerId = arguments.getInt("producer_id");
             producerName = arguments.getString("producer_name");
             producerDescription = arguments.getString("producer_description");
             producerImage = arguments.getString("producer_image");
@@ -204,7 +211,7 @@ public class BeatsFragment extends Fragment implements SearchView.OnQueryTextLis
                 getString(R.string.preference_login), Context.MODE_PRIVATE);
         int userId = sharedPref.getInt("UserId", 0);
 
-        if (tab_position == PRODUCERS_TAB) {
+        if (tab_position == PRODUCERS_TAB || tab_position == 5) {
 
             // Initialize Header
             LayoutInflater inflaterH = getLayoutInflater();
@@ -285,7 +292,7 @@ public class BeatsFragment extends Fragment implements SearchView.OnQueryTextLis
             });
         }
         // Producer's Beat Tab is selected now
-        else if (tab_position == PRODUCERS_TAB && producerId != 0) {
+        else if ((tab_position == PRODUCERS_TAB || tab_position == 5) && producerId != 0) {
             Log.d("ProducerID[BeatAct]", String.valueOf(producerId));
             Call<CategoryResponse> call = apiService.getProducersDetails(producerId, userId, "true", "true");
             call.enqueue(new Callback<CategoryResponse>() {
@@ -432,6 +439,8 @@ public class BeatsFragment extends Fragment implements SearchView.OnQueryTextLis
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int position, long id) {
                 long viewId = view.getId();
+                positionData = position;
+
                 View listItemView = view;
                 final ImageView favouriteBeat = (ImageView) listItemView.findViewById(R.id.is_liked);
 
@@ -509,9 +518,29 @@ public class BeatsFragment extends Fragment implements SearchView.OnQueryTextLis
                         //Toast.makeText(getActivity(), "Signed Out: Successfully", Toast.LENGTH_SHORT).show();
 
                         getActivity().finish();
+                    } else if (viewId == R.id.producer_name) {
+                        Bundle arguments = new Bundle();
+                        arguments.putInt("position", positionData);
+                        arguments.putInt("tab_position", 5);
+                        arguments.putInt("producer_id", beatsObject.getProducerId());
+                        arguments.putString("producer_name", beatsObject.getProducerName());
+                        arguments.putString("producer_description", beatsObject.getProducerDescription());
+                        arguments.putString("producer_image", beatsObject.getProducerImage());
+
+                        mActivity.loadBeatsFragment(arguments);
                     } else {
 
                     }
+                } else if (viewId == R.id.producer_name) {
+                    Bundle arguments = new Bundle();
+                    arguments.putInt("position", positionData);
+                    arguments.putInt("tab_position", 5);
+                    arguments.putInt("producer_id", beatsObject.getProducerId());
+                    arguments.putString("producer_name", beatsObject.getProducerName());
+                    arguments.putString("producer_description", beatsObject.getProducerDescription());
+                    arguments.putString("producer_image", beatsObject.getProducerImage());
+
+                    mActivity.loadBeatsFragment(arguments);
                 } else {
                     ArrayList<BeatsObject> playingQueue = new ArrayList<BeatsObject>(beatsList.subList(position, beatsList.size()));
                     mActivity.playAudio(playingQueue);
