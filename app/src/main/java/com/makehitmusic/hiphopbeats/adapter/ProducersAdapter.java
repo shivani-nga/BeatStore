@@ -13,6 +13,7 @@ import com.bumptech.glide.request.RequestOptions;
 import com.makehitmusic.hiphopbeats.R;
 import com.makehitmusic.hiphopbeats.model.BeatsObject;
 import com.makehitmusic.hiphopbeats.model.ProducersObject;
+import com.makehitmusic.hiphopbeats.rest.GlideApp;
 
 import java.util.ArrayList;
 
@@ -64,7 +65,7 @@ public class ProducersAdapter extends ArrayAdapter<ProducersObject> {
         ImageView producerCover = (ImageView) listItemView.findViewById(R.id.producer_cover);
         // Display the producer_cover of the current producer in that ImageView
         if (!(currentProducer.getProducerImage().equals(""))) {
-            Glide.with(context).load(currentProducer.getProducerImage())
+            GlideApp.with(context).load(currentProducer.getProducerImage())
                     //.placeholder(R.drawable.twotone_library_music_24)
                     .apply(new RequestOptions().placeholder(R.drawable.highlight_color).error(R.drawable.highlight_color))
                     .transition(withCrossFade()).into(producerCover);

@@ -28,6 +28,7 @@ import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.RequestOptions;
 import com.makehitmusic.hiphopbeats.R;
 import com.makehitmusic.hiphopbeats.model.BeatsObject;
+import com.makehitmusic.hiphopbeats.rest.GlideApp;
 
 import static android.content.Context.DOWNLOAD_SERVICE;
 import static android.os.Environment.DIRECTORY_MUSIC;
@@ -45,6 +46,7 @@ import java.util.ArrayList;
 
 import static com.facebook.FacebookSdk.getApplicationContext;
 import static com.makehitmusic.hiphopbeats.utils.Url.BASE_URL;
+import static com.makehitmusic.hiphopbeats.utils.Url.BASE_URL_HTTP;
 
 public class BeatsAdapter extends ArrayAdapter<BeatsObject> {
 
@@ -121,21 +123,26 @@ public class BeatsAdapter extends ArrayAdapter<BeatsObject> {
 
         // Find the ImageView with view ID beat_cover
         ImageView beatCover = (ImageView) listItemView.findViewById(R.id.beat_cover);
+        Log.d("ImageBeat", currentBeat.getItemImageBig());
+        Log.d("ImageProducer", currentBeat.getProducerImage());
         // Display the beat_cover of the current beat in that ImageView
-        if (!(currentBeat.getItemImageBig().equals(BASE_URL))) {
-            Glide.with(context).load(currentBeat.getItemImageBig())
+        if (!(currentBeat.getItemImageBig().equals(BASE_URL)) &&
+                !(currentBeat.getItemImageBig().equals(BASE_URL_HTTP))) {
+            GlideApp.with(context).load(currentBeat.getItemImageBig())
                     //.placeholder(R.drawable.twotone_library_music_24)
                     .apply(new RequestOptions().placeholder(R.drawable.highlight_color).error(R.drawable.highlight_color))
                     .transition(withCrossFade()).into(beatCover);
         }
-        else if (!(currentBeat.getItemImageSmall().equals(BASE_URL))) {
-            Glide.with(context).load(currentBeat.getItemImageSmall())
+        else if (!(currentBeat.getItemImageSmall().equals(BASE_URL)) &&
+                !(currentBeat.getItemImageSmall().equals(BASE_URL_HTTP))) {
+            GlideApp.with(context).load(currentBeat.getItemImageSmall())
                     //.placeholder(R.drawable.twotone_library_music_24)
                     .apply(new RequestOptions().placeholder(R.drawable.highlight_color).error(R.drawable.highlight_color))
                     .transition(withCrossFade()).into(beatCover);
         }
-        else if (!(currentBeat.getProducerImage().equals(BASE_URL))) {
-            Glide.with(context).load(currentBeat.getProducerImage())
+        else if (!(currentBeat.getProducerImage().equals(BASE_URL)) &&
+                !(currentBeat.getProducerImage().equals(BASE_URL_HTTP))) {
+            GlideApp.with(context).load(currentBeat.getProducerImage())
                     //.placeholder(R.drawable.twotone_library_music_24)
                     .apply(new RequestOptions().placeholder(R.drawable.highlight_color).error(R.drawable.highlight_color))
                     .transition(withCrossFade()).into(beatCover);
@@ -153,8 +160,10 @@ public class BeatsAdapter extends ArrayAdapter<BeatsObject> {
 
             // Find the TextView with view ID beat_price
             TextView beatPrice = (TextView) listItemView.findViewById(R.id.beat_price);
+            Log.d("Price", currentBeat.getItemPrice());
+            String value = currentBeat.getItemPrice();
             // Display the beat_price of the current beat in that TextView
-            beatPrice.setText("$" + String.valueOf(currentBeat.getItemPrice()));
+            beatPrice.setText("$" + currentBeat.getItemPrice());
 
             beatPrice.setOnClickListener(new View.OnClickListener() {
                 @Override

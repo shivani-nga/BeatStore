@@ -9,7 +9,7 @@
     <permission android:name="android.permission.MEDIA_CONTENT_CONTROL" />
     <uses-permission android:name="com.android.vending.BILLING" />
 
-    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+    <!--<uses-permission android:name="android.permission.READ_PHONE_STATE" />-->
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 
@@ -18,6 +18,7 @@
         android:icon="@mipmap/app_icon_normal"
         android:label="@string/app_name"
         android:roundIcon="@mipmap/app_icon_rounded"
+        android:networkSecurityConfig="@xml/network_security_config"
         android:supportsRtl="true"
         android:screenOrientation="portrait"
         android:theme="@style/AppTheme">
@@ -64,12 +65,10 @@
 
         <activity
             android:name="com.facebook.FacebookActivity"
-            android:screenOrientation="portrait"
             android:configChanges="keyboard|keyboardHidden|screenLayout|screenSize|orientation"
             android:label="@string/app_name" />
         <activity
             android:name="com.facebook.CustomTabActivity"
-            android:screenOrientation="portrait"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
@@ -98,3 +97,6 @@
     </application>
 
 </manifest>
+
+    <!--android:networkSecurityConfig="@xml/network_security_config"-->
+    <!--android:usesCleartextTraffic="true"-->

@@ -305,6 +305,8 @@ public class MoreFragment extends Fragment {
             editor.putInt("LoginType", 0);
             editor.putInt("UserCode", 0);
             editor.putInt("UserId", 0);
+            editor.putString("UserName", "null");
+            editor.putString("UserEmail", "null");
             editor.apply();
 
             // Take the user to Login Screen

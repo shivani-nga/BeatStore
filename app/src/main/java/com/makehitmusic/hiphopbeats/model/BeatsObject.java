@@ -17,7 +17,7 @@ public class BeatsObject {
     @SerializedName("item_duration")
     private  String itemDuration;
     @SerializedName("item_price")
-    private  double itemPrice;
+    private  String itemPrice;
     @SerializedName("item_sample_path")
     private  String itemSamplePath;
     @SerializedName("item_image_small")
@@ -45,7 +45,7 @@ public class BeatsObject {
 
 
     public BeatsObject(int itemId, String itemName, String itemDescription, String itemDate, String itemDuration,
-                       double itemPrice, String itemSamplePath, String itemImageSmall, String itemImageBig, int itemRating,
+                       String itemPrice, String itemSamplePath, String itemImageSmall, String itemImageBig, int itemRating,
                        int producerId, String producerName, String producerCompanyName, String producerDescription,
                        String producerImage, String producerFriendlyUrl, String isLiked, List<Category> beatsCategory) {
         this.itemId = itemId;
@@ -88,7 +88,7 @@ public class BeatsObject {
         return itemDuration;
     }
 
-    public double getItemPrice() {
+    public String getItemPrice() {
         return itemPrice;
     }
 

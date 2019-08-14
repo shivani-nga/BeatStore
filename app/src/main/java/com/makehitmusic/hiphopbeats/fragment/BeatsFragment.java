@@ -40,6 +40,7 @@ import com.makehitmusic.hiphopbeats.model.LoginRequest;
 import com.makehitmusic.hiphopbeats.model.LoginResponse;
 import com.makehitmusic.hiphopbeats.rest.ApiClient;
 import com.makehitmusic.hiphopbeats.rest.ApiInterface;
+import com.makehitmusic.hiphopbeats.rest.GlideApp;
 import com.makehitmusic.hiphopbeats.view.LoginScreen;
 import com.makehitmusic.hiphopbeats.view.MainActivity;
 
@@ -222,7 +223,7 @@ public class BeatsFragment extends Fragment implements SearchView.OnQueryTextLis
             ReadMoreTextView producerInfo = (ReadMoreTextView) header.findViewById(R.id.producer_info);
 
             if (!(producerImage.equals(""))) {
-                Glide.with(this).load(producerImage)
+                GlideApp.with(this).load(producerImage)
                         //.placeholder(R.drawable.twotone_library_music_24)
                         .apply(new RequestOptions().placeholder(R.drawable.highlight_color).error(R.drawable.highlight_color))
                         .transition(withCrossFade()).into(producerCover);
@@ -441,10 +442,14 @@ public class BeatsFragment extends Fragment implements SearchView.OnQueryTextLis
                 long viewId = view.getId();
                 positionData = position;
 
+                if (tab_position == 5 || tab_position == PRODUCERS_TAB) {
+                    positionData = positionData - 1;
+                }
+
                 View listItemView = view;
                 final ImageView favouriteBeat = (ImageView) listItemView.findViewById(R.id.is_liked);
 
-                final BeatsObject beatsObject = beatsList.get(position);
+                final BeatsObject beatsObject = beatsList.get(positionData);
 
                 SharedPreferences sharedPref = getActivity().getSharedPreferences(
                         getString(R.string.preference_login), Context.MODE_PRIVATE);
@@ -518,18 +523,15 @@ public class BeatsFragment extends Fragment implements SearchView.OnQueryTextLis
                         //Toast.makeText(getActivity(), "Signed Out: Successfully", Toast.LENGTH_SHORT).show();
 
                         getActivity().finish();
-                    } else if (viewId == R.id.producer_name) {
+                    } else {
                         Bundle arguments = new Bundle();
                         arguments.putInt("position", positionData);
                         arguments.putInt("tab_position", 5);
-                        arguments.putInt("producer_id", beatsObject.getProducerId());
-                        arguments.putString("producer_name", beatsObject.getProducerName());
-                        arguments.putString("producer_description", beatsObject.getProducerDescription());
-                        arguments.putString("producer_image", beatsObject.getProducerImage());
+                        arguments.putInt("item_id", beatsObject.getItemId());
+                        arguments.putString("item_name", beatsObject.getItemName());
+                        arguments.putString("item_price", beatsObject.getItemPrice());
 
-                        mActivity.loadBeatsFragment(arguments);
-                    } else {
-
+                        mActivity.purchaseThisBeat(arguments);
                     }
                 } else if (viewId == R.id.producer_name) {
                     Bundle arguments = new Bundle();
@@ -542,7 +544,7 @@ public class BeatsFragment extends Fragment implements SearchView.OnQueryTextLis
 
                     mActivity.loadBeatsFragment(arguments);
                 } else {
-                    ArrayList<BeatsObject> playingQueue = new ArrayList<BeatsObject>(beatsList.subList(position, beatsList.size()));
+                    ArrayList<BeatsObject> playingQueue = new ArrayList<BeatsObject>(beatsList.subList(positionData, beatsList.size()));
                     mActivity.playAudio(playingQueue);
                 }
 

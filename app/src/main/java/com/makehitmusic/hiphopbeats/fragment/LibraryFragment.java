@@ -35,6 +35,8 @@ import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import com.makehitmusic.hiphopbeats.R;
 import com.makehitmusic.hiphopbeats.adapter.BeatsAdapter;
 import com.makehitmusic.hiphopbeats.model.BeatsObject;
@@ -44,7 +46,9 @@ import com.makehitmusic.hiphopbeats.rest.ApiInterface;
 import com.makehitmusic.hiphopbeats.view.MainActivity;
 
 import java.io.File;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.List;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -86,10 +90,14 @@ public class LibraryFragment extends Fragment implements SearchView.OnQueryTextL
     private final int FAVORITES_TAB = 3;
     private final int LIBRARY_TAB = 4;
 
+    private SharedPreferences purchasePreferences;
+    private final String PURCHASE = "com.makehitmusic.hiphopbeats.PURCHASE";
+
 //    private PlayerAdapter mPlayerAdapter;
 
     public int categoryId;
     ArrayList<BeatsObject> beatsList;
+    ArrayList<BeatsObject> purchasedValues;
 
     private long downloadID;
 
@@ -195,6 +203,8 @@ public class LibraryFragment extends Fragment implements SearchView.OnQueryTextL
         // Inflate the layout for this fragment
         View rootView =  inflater.inflate(R.layout.activity_beats, container, false);
 
+        purchasedValues = new ArrayList<BeatsObject>();
+
         // Find the ListView which will be populated with the beats data
         beatsListView = (ListView) rootView.findViewById(R.id.list_beats_record);
 
@@ -244,18 +254,46 @@ public class LibraryFragment extends Fragment implements SearchView.OnQueryTextL
                     int statusCode = response.code();
                     beatsList = response.body().getBeatsResults();
 
-                    if (beatsList.isEmpty()) {
+                    purchasePreferences = getContext().getSharedPreferences(PURCHASE, Context.MODE_PRIVATE);
+
+                    // get saved data
+                    Gson gson = new Gson();
+                    String json = purchasePreferences.getString("purchaseList", null);
+                    Type type = new TypeToken<List<String>>() {
+                    }.getType();
+                    List<String> purchaseIDS = gson.fromJson(json, type);
+                    if (purchaseIDS != null) {
+                        ArrayList<String> purchasedIDS = new ArrayList<String>(purchaseIDS);
+
+                        for (String id : purchasedIDS) {
+                            for (BeatsObject value : beatsList) {
+                                if (String.valueOf(value.getItemId()).contains(id)) {
+                                    purchasedValues.add(value);
+                                }
+                            }
+                        }
+
+                        if (purchasedValues.isEmpty()) {
+                            emptyView.setVisibility(View.VISIBLE);
+                            emptyImage.setVisibility(View.VISIBLE);
+                            emptyText.setVisibility(View.VISIBLE);
+                            emptyImage.setImageResource(R.drawable.empty_view);
+                            emptyText.setText(R.string.empty_view_text);
+                        } else {
+                            emptyView.setVisibility(View.GONE);
+                            emptyImage.setVisibility(View.GONE);
+                            emptyText.setVisibility(View.GONE);
+                        }
+
+                    } else {
                         emptyView.setVisibility(View.VISIBLE);
                         emptyImage.setVisibility(View.VISIBLE);
                         emptyText.setVisibility(View.VISIBLE);
                         emptyImage.setImageResource(R.drawable.empty_view);
                         emptyText.setText(R.string.empty_view_text);
-                    } else {
-                        emptyView.setVisibility(View.GONE);
-                        emptyImage.setVisibility(View.GONE);
-                        emptyText.setVisibility(View.GONE);
                     }
-                    beatsListView.setAdapter(new BeatsAdapter(getActivity(), beatsList, 1));
+
+                    beatsListView.setAdapter(new BeatsAdapter(getActivity(), purchasedValues, 1));
                 }
 
                 @Override
@@ -658,8 +696,8 @@ public class LibraryFragment extends Fragment implements SearchView.OnQueryTextL
         }
 
         searchedText = newText;
-        ArrayList<BeatsObject> filteredValues = new ArrayList<BeatsObject>(beatsList);
-        for (BeatsObject value : beatsList) {
+        ArrayList<BeatsObject> filteredValues = new ArrayList<BeatsObject>(purchasedValues);
+        for (BeatsObject value : purchasedValues) {
             if (searchByBeats) {
                 searchView.setQueryHint("Beat Name");
                 if (!value.getItemName().toLowerCase().contains(newText.toLowerCase())) {
@@ -679,7 +717,7 @@ public class LibraryFragment extends Fragment implements SearchView.OnQueryTextL
     }
 
     public void resetSearch() {
-        beatsListView.setAdapter(new BeatsAdapter(getActivity(), beatsList, 1));
+        beatsListView.setAdapter(new BeatsAdapter(getActivity(), purchasedValues, 1));
     }
 
     public boolean performSearch(String searchedText) {
@@ -688,8 +726,8 @@ public class LibraryFragment extends Fragment implements SearchView.OnQueryTextL
             return false;
         }
 
-        ArrayList<BeatsObject> filteredValues = new ArrayList<BeatsObject>(beatsList);
-        for (BeatsObject value : beatsList) {
+        ArrayList<BeatsObject> filteredValues = new ArrayList<BeatsObject>(purchasedValues);
+        for (BeatsObject value : purchasedValues) {
             if (searchByBeats) {
                 searchView.setQueryHint("Beat Name");
                 if (!value.getItemName().toLowerCase().contains(searchedText.toLowerCase())) {

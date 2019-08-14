@@ -7,6 +7,8 @@ import com.makehitmusic.hiphopbeats.model.FavouriteRequest;
 import com.makehitmusic.hiphopbeats.model.FavouriteResponse;
 import com.makehitmusic.hiphopbeats.model.LoginRequest;
 import com.makehitmusic.hiphopbeats.model.LoginResponse;
+import com.makehitmusic.hiphopbeats.model.ReceiptRequest;
+import com.makehitmusic.hiphopbeats.model.ReceiptResponse;
 import com.makehitmusic.hiphopbeats.presenter.JsonResponse;
 
 import retrofit2.Call;
@@ -44,6 +46,15 @@ public interface ApiInterface {
                                                @Query("userid") int userId,
                                                @Query("latest") String latestBeats,
                                                @Query("android") String trueAndroid);
+
+    @GET("mhmbeats/purchase.php")
+    Call<CategoryResponse> getPurchaseDetails(@Query("producer_id") int producerId,
+                                               @Query("userid") int userId,
+                                               @Query("latest") String latestBeats,
+                                               @Query("android") String trueAndroid);
+
+    @POST("mhmbeats/validate_receipt_android.php")
+    Call<ReceiptResponse> postValidateReceipt(@Body ReceiptRequest receiptRequest);
 
     @GET("video/youTube.json")
     Call<JsonResponse> getYoutubeLink();

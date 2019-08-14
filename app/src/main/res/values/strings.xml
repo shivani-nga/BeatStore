@@ -52,7 +52,13 @@
 
     <!-- Server Client ID.  This should be a valid Web OAuth 2.0 Client ID obtained
          from https://console.developers.google.com/ -->
-    <string name="server_client_id">878344980190-juhjeoakvvp5q15l1j49g2c329iph8p2.apps.googleusercontent.com</string>
+    <!-- Old/Debug -->
+    <!--<string name="server_client_id">878344980190-juhjeoakvvp5q15l1j49g2c329iph8p2.apps.googleusercontent.com</string>-->
+    <!-- New/Release -->
+    <string name="server_client_id">878344980190-0nd63vmdajhlea133fsloou09kqaidd3.apps.googleusercontent.com</string>
+
+    <!-- Client Base 64 Encoded RSA Key. Used for In-App Purchase. Found on Play Console -->
+    <string name="base_64_rsa_key">MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAyKI7pQigSOkjyuYQ6adgaZ7e00zFiCkIDNlIOlPIu1eUa12ef3A2mx4BDvzKepEODH9QEL0AMulvw4HpXSVOsR17x9F6HIkrpTnCqruCKnEJsBbpBygP2mwu5iMXYr8zjdxKisHvroosS+oufGC6XqaiJSynGkfjjNbsF/NN+Oa4Zzlb0WaNH/FTUcdL+5NF0wr9u37NHp/jrP5fjs4oBJF7E1HrlZ4qO8/pWY+JcOqCJlmHtMhQpygttDQfvLDlHLT8HRh33iysT0V5YGMAo1DO3L5ISlcmTi/mHfShTFIaT2HU7oiyXZWKQ5OeHsuGO2WmPLA+oaGbnIuYGWJiIQIDAQAB</string>
 
     <!-- Facebook App ID -->
     <string name="facebook_app_id">2326506384058206</string>

@@ -51,6 +51,30 @@ public class StorageUtil {
         return preferences.getInt("audioIndex", -1);//return -1 if no data found
     }
 
+    public void storeAudioDuration(long duration) {
+        preferences = context.getSharedPreferences(STORAGE, Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = preferences.edit();
+        editor.putLong("audioDuration", duration);
+        editor.apply();
+    }
+
+    public long loadAudioDuration() {
+        preferences = context.getSharedPreferences(STORAGE, Context.MODE_PRIVATE);
+        return preferences.getLong("audioDuration", 0);//return 0 if no data found
+    }
+
+    public void storePlaybackState(int state) {
+        preferences = context.getSharedPreferences(STORAGE, Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = preferences.edit();
+            editor.putInt("playbackState", state);
+        editor.apply();
+    }
+
+    public int loadPlaybackState() {
+        preferences = context.getSharedPreferences(STORAGE, Context.MODE_PRIVATE);
+        return preferences.getInt("playbackState", 0);//return 0 if no data found
+    }
+
     public void clearCachedAudioPlaylist() {
         preferences = context.getSharedPreferences(STORAGE, Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = preferences.edit();

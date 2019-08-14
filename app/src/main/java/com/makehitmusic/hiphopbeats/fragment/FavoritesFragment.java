@@ -191,7 +191,7 @@ public class FavoritesFragment extends Fragment implements SearchView.OnQueryTex
                     int statusCode = response.code();
                     beatsList = response.body().getBeatsResults();
 
-                    if (beatsList.isEmpty()) {
+                    if (beatsList == null) {
                         emptyView.setVisibility(View.VISIBLE);
                         emptyImage.setVisibility(View.VISIBLE);
                         emptyText.setVisibility(View.VISIBLE);
@@ -204,7 +204,11 @@ public class FavoritesFragment extends Fragment implements SearchView.OnQueryTex
                     }
 
                     mAdapter = new BeatsAdapter(getActivity(), beatsList, 0);
-                    beatsListView.setAdapter(mAdapter);
+                    if (beatsList != null) {
+                        beatsListView.setAdapter(mAdapter);
+                    } else {
+                        beatsListView.setAdapter(null);
+                    }
                 }
 
                 @Override
@@ -324,7 +328,14 @@ public class FavoritesFragment extends Fragment implements SearchView.OnQueryTex
 
                         getActivity().finish();
                     } else {
+                        Bundle arguments = new Bundle();
+                        arguments.putInt("position", positionData);
+                        arguments.putInt("tab_position", 5);
+                        arguments.putInt("item_id", beatsObject.getItemId());
+                        arguments.putString("item_name", beatsObject.getItemName());
+                        arguments.putString("item_price", beatsObject.getItemPrice());
 
+                        mActivity.purchaseThisBeat(arguments);
                     }
                 } else if (viewId == R.id.producer_name) {
                     Bundle arguments = new Bundle();

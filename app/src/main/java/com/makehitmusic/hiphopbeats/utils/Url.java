@@ -7,7 +7,9 @@ package com.makehitmusic.hiphopbeats.utils;
 public class Url {
 
     // global server - Client's End (Production Purpose)
-    public static String BASE_URL = "http://www.makehitmusic.com/";
+    public static String BASE_URL = "https://www.makehitmusic.com/";
+
+    public static String BASE_URL_HTTP = "http://www.makehitmusic.com/";
 
     // local server - Client's End (Testing Purpose)
     //public static String BASE_URL = "http://10.0.0.136/";

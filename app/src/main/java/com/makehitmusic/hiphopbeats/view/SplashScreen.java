@@ -53,6 +53,9 @@ public class SplashScreen extends Activity {
     // Identifier to check whether user is logged in using Facebook or not
     public boolean isFacebookLoggedIn = false;
 
+    // Identifier to indicate that LoginScreen has to to be loaded
+    public boolean launceLoginScreen = false;
+
     private GoogleSignInClient mGoogleSignInClient;
 
     @Override
@@ -124,6 +127,8 @@ public class SplashScreen extends Activity {
         int loginTypeInt = sharedPref.getInt("LoginType", 0);
         int userCode = sharedPref.getInt("UserCode", 0);
         int userId = sharedPref.getInt("UserId", 0);
+        String userName = sharedPref.getString("UserName", "null");
+        String userEmail = sharedPref.getString("UserEmail", "null");
 
         if (loginTypeInt != 0 && userCode != 0 && userId != 0) {
             isLoggedIn = true;
@@ -136,6 +141,8 @@ public class SplashScreen extends Activity {
             Log.d("LoginTypeInt", String.valueOf(loginTypeInt));
             Log.d("UserCode", String.valueOf(userCode));
             Log.d("UserId", String.valueOf(userId));
+            Log.d("UserName", String.valueOf(userName));
+            Log.d("UserEmail", String.valueOf(userEmail));
 //            launchHomeScreen();
         } else {
             isLoggedIn = false;
@@ -216,14 +223,14 @@ public class SplashScreen extends Activity {
             // User is already logged in so load MainActivity
             Intent i = new Intent(SplashScreen.this, MainActivity.class);
             startActivity(i);
+
+            // close this activity
+            finish();
         } else {
             // User is not logged in so load LoginScreen
-            Intent i = new Intent(SplashScreen.this, LoginScreen.class);
-            startActivity(i);
+            launceLoginScreen = true;
+            revokeAccess();
         }
-
-        // close this activity
-        finish();
     }
 
     public void revokeAccess() {
@@ -253,7 +260,17 @@ public class SplashScreen extends Activity {
         editor.putInt("LoginType", 0);
         editor.putInt("UserCode", 0);
         editor.putInt("UserId", 0);
+        editor.putString("UserName", "null");
+        editor.putString("UserEmail", "null");
         editor.apply();
+
+        if (launceLoginScreen) {
+            Intent i = new Intent(SplashScreen.this, LoginScreen.class);
+            startActivity(i);
+
+            // close this activity
+            finish();
+        }
     }
 
     //  viewpager change listener

@@ -15,6 +15,7 @@ import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.RequestOptions;
 import com.makehitmusic.hiphopbeats.R;
 import com.makehitmusic.hiphopbeats.model.Category;
+import com.makehitmusic.hiphopbeats.rest.GlideApp;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -85,20 +86,20 @@ public class CategoryAdapter extends RecyclerView.Adapter<CategoryAdapter.Catego
         holder.categoryTitle.setText(category.getCategoryName());
 
         if (!(category.getCategoryImageLarge().equals(BASE_URL))) {
-            Glide.with(mContext).load(category.getCategoryImageLarge())
+            GlideApp.with(mContext).load(category.getCategoryImageLarge())
                     //.placeholder(R.drawable.twotone_library_music_24)
                     .apply(new RequestOptions().placeholder(R.drawable.highlight_color).error(R.drawable.highlight_color))
                     .transition(withCrossFade()).into(holder.thumbnail);
         }
         else if (!(category.getCategoryImage().equals(BASE_URL))) {
             // loading cover using Glide library
-            Glide.with(mContext).load(category.getCategoryImage())
+            GlideApp.with(mContext).load(category.getCategoryImage())
                     //.placeholder(R.drawable.twotone_library_music_24)
                     .apply(new RequestOptions().placeholder(R.drawable.highlight_color).error(R.drawable.highlight_color))
                     .transition(withCrossFade()).into(holder.thumbnail);
         }
         else {
-            Glide.with(mContext).load(CATEGORY_IMAGE_DEFAULT)
+            GlideApp.with(mContext).load(CATEGORY_IMAGE_DEFAULT)
                     .transition(withCrossFade()).into(holder.thumbnail);
         }
     }

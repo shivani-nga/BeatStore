@@ -41,6 +41,7 @@ import com.makehitmusic.hiphopbeats.model.CategoryResponse;
 import com.makehitmusic.hiphopbeats.presenter.JsonResponse;
 import com.makehitmusic.hiphopbeats.rest.ApiClient;
 import com.makehitmusic.hiphopbeats.rest.ApiInterface;
+import com.makehitmusic.hiphopbeats.rest.GlideApp;
 import com.makehitmusic.hiphopbeats.view.MainActivity;
 
 import java.util.ArrayList;
@@ -171,9 +172,9 @@ public class CategoryFragment extends Fragment implements SearchView.OnQueryText
         // Get YouTube video link and image and open video in YouTube App
         youtubeBanner = view.findViewById(R.id.banner);
 
-        Glide.with(mContext).load(BASE_URL+YOUTUBE_IMAGE_LINK)
+        GlideApp.with(mContext).load(BASE_URL + YOUTUBE_IMAGE_LINK)
                 //.placeholder(R.drawable.twotone_library_music_24)
-                .apply(new RequestOptions().placeholder(R.drawable.youtube_logo).error(R.drawable.youtube_logo))
+                .apply(new RequestOptions().placeholder(R.drawable.rounded_border).error(R.drawable.rounded_border))
                 .transition(withCrossFade()).into(youtubeBanner);
 
         youtubeBanner.setOnClickListener(new View.OnClickListener() {

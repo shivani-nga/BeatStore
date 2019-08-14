@@ -244,6 +244,9 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
     @Override
     public void onPrepared(MediaPlayer mp) {
         //Invoked when the media source is ready for playback.
+        long audioDuration = mediaPlayer.getDuration();
+        //Update stored duration
+        new StorageUtil(getApplicationContext()).storeAudioDuration(audioDuration);
         playMedia();
     }
 
@@ -702,10 +705,14 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
             case 0:
                 // Play
                 playbackAction.setAction(ACTION_PLAY);
+                //Update playback state
+                new StorageUtil(getApplicationContext()).storePlaybackState(1);
                 return PendingIntent.getService(this, actionNumber, playbackAction, 0);
             case 1:
                 // Pause
                 playbackAction.setAction(ACTION_PAUSE);
+                //Update playback state
+                new StorageUtil(getApplicationContext()).storePlaybackState(2);
                 return PendingIntent.getService(this, actionNumber, playbackAction, 0);
             case 2:
                 // Next track

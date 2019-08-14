@@ -138,6 +138,8 @@ public class LoginScreen extends Activity implements
                 loginPreferences.putInt("LoginType", 0);
                 loginPreferences.putInt("UserCode", 0);
                 loginPreferences.putInt("UserId", 0);
+                loginPreferences.putString("UserName", "null");
+                loginPreferences.putString("UserEmail", "null");
                 loginPreferences.apply();
 
                 View loadingIndicator = findViewById(R.id.loading_indicator);
@@ -386,10 +388,25 @@ public class LoginScreen extends Activity implements
                 editor.putInt("LoginType", loginTypeInt);
                 editor.putInt("UserCode", userCode);
                 editor.putInt("UserId", userId);
+                if (loginTypeInt == 1) {
+                    editor.putString("UserName", userNameG);
+                    editor.putString("UserEmail", emailIdG);
+                } else if (loginTypeInt == 2) {
+                    editor.putString("UserName", userNameF);
+                    editor.putString("UserEmail", emailIdF);
+                }
                 editor.apply();
 
                 Log.d("UserCode", String.valueOf(userCode));
                 Log.d("UserId", String.valueOf(userId));
+                if (loginTypeInt == 1) {
+                    Log.d("UserName", userNameG);
+                    Log.d("UserEmail", emailIdG);
+                } else if (loginTypeInt == 2) {
+                    Log.d("UserName", userNameF);
+                    Log.d("UserEmail", emailIdF);
+                }
+
             }
 
             @Override

@@ -59,7 +59,6 @@
             <ImageView
                 android:id="@+id/banner"
                 android:layout_width="match_parent"
-                android:src="@drawable/youtube_logo"
                 android:layout_height="match_parent"
                 android:foreground="?attr/selectableItemBackgroundBorderless"
                 android:clickable="true"
