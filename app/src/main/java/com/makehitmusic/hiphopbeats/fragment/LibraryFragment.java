@@ -246,7 +246,7 @@ public class LibraryFragment extends Fragment implements SearchView.OnQueryTextL
         if (loginTypeInt != 0 && userCode != 0 && userId != 0) {
             ApiInterface apiService = ApiClient.getClient().create(ApiInterface.class);
 
-            Call<CategoryResponse> call = apiService.getBeatsDetails("true", "true");
+            Call<CategoryResponse> call = apiService.getBeatsDetails("false", "true");
             call.enqueue(new Callback<CategoryResponse>() {
                 @Override
                 public void onResponse(Call<CategoryResponse> call, Response<CategoryResponse> response) {

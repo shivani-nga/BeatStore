@@ -285,13 +285,14 @@ public class MainActivity extends AppCompatActivity
                         mPlayButtonBig.setImageResource(R.drawable.round_pause_white_48);
                     }
                 }
-            } else {
-                mBeatCover.setImageResource(R.drawable.default_cover);
-                mBeatCoverBig.setImageResource(R.drawable.default_cover);
-                mBeatName.setText("Beat Name");
-                mBeatNameBig.setText("Beat Name");
-                mProducerName.setText("Producer Name");
-                mProducerNameBig.setText("Producer Name");
+            }
+            else {
+                //mBeatCover.setImageResource(R.drawable.default_cover);
+                //mBeatCoverBig.setImageResource(R.drawable.default_cover);
+                //mBeatName.setText("Beat Name");
+                //mBeatNameBig.setText("Beat Name");
+                //mProducerName.setText("Producer Name");
+                //mProducerNameBig.setText("Producer Name");
                 mCurrentTime.setText("0:00");
                 mFullTime.setText("0:00");
                 mAudioSeekbar.setProgress(0);

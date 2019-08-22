@@ -126,7 +126,7 @@ public class MoreFragment extends Fragment {
         String urlLicensing = "https://makehitmusic.net/apps/mogul/faqs/";
         String urlApps = "https://itunes.apple.com/us/app/make-hit-music-hip-hop-studio/id1438351352?ls=1&mt=8";
         String urlSell = "https://pages.convertkit.com/ea2996f0bb/ca7fa96488";
-        String urlIdea = "https://my.appideatoreality.com";
+        String urlIdea = "https://dantemedia.teachable.com/p/how-to-make-android-iphone-apps-without-coding-online-course";
         String urlReview = "https://play.google.com/store/apps/details?id=com.makehitmusic.hiphopbeats";
         String urlTerms = "https://makehitmusic.net/apps/mogul/terms-of-use/";
         String urlPolicy = "https://makehitmusic.net/apps/mogul/privacy-policy/";
